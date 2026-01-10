@@ -1,10 +1,10 @@
 entrypoint = "server.js"
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "web", "nix"]
 run = "npm start"
 hidden = [".config", ".git", "node_modules"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [deployment]
 run = ["npm", "start"]
