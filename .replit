@@ -1,11 +1,13 @@
-run = "npm start"
 entrypoint = "server.js"
+modules = ["nodejs-20"]
+run = "npm start"
+hidden = [".config", ".git", "node_modules"]
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "npm start"]
+run = ["npm", "start"]
 deploymentTarget = "cloudrun"
 ignorePorts = false
 
