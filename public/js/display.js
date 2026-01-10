@@ -8,7 +8,8 @@ let queue = [];
 let countdownInterval = null;
 let countdownSeconds = 90;
 let isPaused = false;
-let player = null;
+let performanceTimerInterval = null;
+let performanceStartTime = null;
 
 // Drunk-o-meter status messages
 const drunkStatuses = [
@@ -48,43 +49,47 @@ const songsCount = document.getElementById('songs-count');
 const reactionOverlay = document.getElementById('reaction-overlay');
 const confettiContainer = document.getElementById('confetti-container');
 const pausedOverlay = document.getElementById('paused-overlay');
+const youtubeLink = document.getElementById('youtube-link');
+const timerDisplay = document.getElementById('timer-display');
 
-// Initialize YouTube Player API
-const tag = document.createElement('script');
-tag.src = 'https://www.youtube.com/iframe_api';
-const firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-window.onYouTubeIframeAPIReady = function() {
-  player = new YT.Player('youtube-player', {
-    height: '100%',
-    width: '100%',
-    playerVars: {
-      autoplay: 0,
-      controls: 1,
-      modestbranding: 1,
-      rel: 0,
-      fs: 1
-    },
-    events: {
-      onStateChange: onPlayerStateChange
-    }
-  });
-};
-
-function onPlayerStateChange(event) {
-  // When video ends, could auto-advance (optional)
-  if (event.data === YT.PlayerState.ENDED) {
-    // Video finished - could trigger next song automatically
-    console.log('Video ended');
+// Set YouTube link for current song
+function setYouTubeLink(song) {
+  if (song.youtubeUrl) {
+    youtubeLink.href = song.youtubeUrl;
+  } else if (song.youtubeId) {
+    youtubeLink.href = `https://www.youtube.com/watch?v=${song.youtubeId}`;
   }
 }
 
-// Load video
-function loadVideo(youtubeId) {
-  if (player && player.loadVideoById) {
-    player.loadVideoById(youtubeId);
+// Start performance timer
+function startPerformanceTimer(startedAt) {
+  clearInterval(performanceTimerInterval);
+
+  if (startedAt) {
+    performanceStartTime = new Date(startedAt);
+  } else {
+    performanceStartTime = new Date();
   }
+
+  updateTimerDisplay();
+  performanceTimerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+// Update timer display
+function updateTimerDisplay() {
+  if (!performanceStartTime) return;
+
+  const elapsed = Math.floor((Date.now() - performanceStartTime.getTime()) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Stop performance timer
+function stopPerformanceTimer() {
+  clearInterval(performanceTimerInterval);
+  performanceStartTime = null;
+  timerDisplay.textContent = '0:00';
 }
 
 // Show appropriate screen
@@ -131,8 +136,8 @@ function startCountdown(song, roast, isVip) {
 
     if (countdownSeconds <= 0) {
       clearInterval(countdownInterval);
-      // Time's up - show now playing
-      showNowPlaying(song, roast, isVip);
+      // Time's up - show now playing (timer starts now)
+      showNowPlaying(song, roast, isVip, new Date().toISOString());
     }
   }, 1000);
 }
@@ -159,7 +164,7 @@ function updateCountdownDisplay() {
 }
 
 // Show now playing screen
-function showNowPlaying(song, roast, isVip) {
+function showNowPlaying(song, roast, isVip, startedAt) {
   currentSong = song;
 
   currentName.textContent = song.guestName;
@@ -167,8 +172,11 @@ function showNowPlaying(song, roast, isVip) {
   currentSongEl.textContent = song.songTitle;
   roastText.textContent = roast;
 
-  // Load the video
-  loadVideo(song.youtubeId);
+  // Set YouTube link
+  setYouTubeLink(song);
+
+  // Start the performance timer
+  startPerformanceTimer(startedAt);
 
   showScreen('playing');
 
@@ -362,7 +370,11 @@ socket.on('queue-updated', (data) => {
 
   // If no current song and queue is empty, show waiting
   if (!data.current && (!data.queue || data.queue.length === 0)) {
+    stopPerformanceTimer();
     showScreen('waiting');
+  } else if (!data.current && data.queue && data.queue.length > 0) {
+    // No current song but queue has songs - stop timer and show waiting
+    stopPerformanceTimer();
   }
 });
 

@@ -373,6 +373,17 @@
         "skipUsed": true,
         "createdAt": "2026-01-10T20:32:31.401Z"
       }
+    ],
+    [
+      "device_immd8aiko_1768086853393",
+      {
+        "id": "device_immd8aiko_1768086853393",
+        "name": "TestUser_1736553600",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T23:16:36.132Z"
+      }
     ]
   ],
   "songs": [
@@ -891,9 +902,21 @@
       "positionOverride": null,
       "submittedAt": "2026-01-10T20:33:51.559Z",
       "completedAt": null
+    },
+    {
+      "id": 53,
+      "guestId": "device_immd8aiko_1768086853393",
+      "guestName": "TestUser_1736553600",
+      "songTitle": "Test Song",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T23:16:40.866Z",
+      "completedAt": null
     }
   ],
-  "songIdCounter": 53,
+  "songIdCounter": 54,
   "stats": {
     "totalSongsPlayed": 34,
     "partyStartedAt": "2026-01-10T19:28:58.579Z",

@@ -59,7 +59,7 @@
       flex-direction: column;
     }
 
-    .video-wrapper {
+    .video-action-wrapper {
       flex: 1;
       background: linear-gradient(135deg, #1a1a2e, #2d2d4a);
       border-radius: 24px;
@@ -67,12 +67,60 @@
       position: relative;
       min-height: 400px;
       box-shadow: 0 16px 48px rgba(114, 9, 183, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
     }
 
-    .video-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .play-video-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 3rem 5rem;
+      background: linear-gradient(135deg, #FF6B6B, #F72585);
+      border-radius: 24px;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(247, 37, 133, 0.4);
+      cursor: pointer;
+    }
+
+    .play-video-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 48px rgba(247, 37, 133, 0.6);
+    }
+
+    .play-icon {
+      font-size: 6rem;
+      line-height: 1;
+    }
+
+    .play-text {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .performance-timer {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-icon {
+      font-size: 1.25rem;
     }
 
     .performer-info {
@@ -550,8 +598,15 @@
 
       <!-- Now playing state -->
       <div id="now-playing-screen" class="now-playing-section hidden">
-        <div class="video-wrapper">
-          <div id="youtube-player"></div>
+        <div class="video-action-wrapper">
+          <a id="youtube-link" href="#" target="_blank" class="play-video-btn">
+            <span class="play-icon">▶</span>
+            <span class="play-text">PLAY KARAOKE VIDEO</span>
+          </a>
+          <div id="performance-timer" class="performance-timer">
+            <span class="timer-icon">⏱️</span>
+            <span id="timer-display">0:00</span>
+          </div>
         </div>
 
         <div class="performer-info">

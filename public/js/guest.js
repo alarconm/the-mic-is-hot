@@ -566,19 +566,25 @@ socket.on('party-reset', () => {
   showToast("🎉 Party reset! Fresh start!");
 });
 
+// Timeout in minutes (must match server)
+const SONG_TIMEOUT_MINUTES = 5;
+
 // Update performer status and show/hide action buttons
 function updatePerformerStatus() {
   // Check if I'm currently performing
   amIPerforming = currentlyPlaying && currentlyPlaying.guestId === deviceId;
 
-  // Check if I'm next (first in queue and no one is performing)
-  isMyTurn = !currentlyPlaying && currentQueue.length > 0 && currentQueue[0].guestId === deviceId;
+  // Check if I'm first in queue
+  const imFirstInQueue = currentQueue.length > 0 && currentQueue[0].guestId === deviceId;
 
-  renderPerformerActions();
+  // Check if I'm next (first in queue and no one is performing OR timeout reached)
+  isMyTurn = imFirstInQueue && !currentlyPlaying;
+
+  renderPerformerActions(imFirstInQueue);
 }
 
 // Render performer action buttons
-function renderPerformerActions() {
+function renderPerformerActions(imFirstInQueue) {
   // Get or create the performer actions container
   let performerActions = document.getElementById('performer-actions');
 
@@ -626,7 +632,7 @@ function renderPerformerActions() {
     performerActions.appendChild(doneBtn);
 
   } else if (isMyTurn) {
-    // Show "Start My Song" button
+    // Show "Start My Song" button - no one is performing
     performerActions.style.display = 'block';
     performerActions.style.background = 'linear-gradient(135deg, rgba(247, 37, 133, 0.15), rgba(114, 9, 183, 0.15))';
     performerActions.style.border = '2px solid #F72585';
@@ -651,6 +657,66 @@ function renderPerformerActions() {
     performerActions.appendChild(songInfo);
     performerActions.appendChild(startBtn);
 
+  } else if (imFirstInQueue && currentlyPlaying && currentlyPlaying.startedAt) {
+    // I'm next but someone is performing - show waiting/override UI
+    const startedAt = new Date(currentlyPlaying.startedAt);
+    const elapsedMs = Date.now() - startedAt.getTime();
+    const elapsedMinutes = elapsedMs / 1000 / 60;
+    const canOverride = elapsedMinutes >= SONG_TIMEOUT_MINUTES;
+
+    performerActions.style.display = 'block';
+    performerActions.style.animation = '';
+
+    if (canOverride) {
+      // Can take over!
+      performerActions.style.background = 'linear-gradient(135deg, rgba(255, 159, 28, 0.15), rgba(255, 107, 107, 0.15))';
+      performerActions.style.border = '2px solid #FF9F1C';
+
+      const header = document.createElement('div');
+      header.style.cssText = 'text-align: center; margin-bottom: 1rem;';
+      header.innerHTML = '<div style="font-size: 2rem;">⏰</div><div style="font-size: 1.25rem; font-weight: 700; color: #FF9F1C;">YOU\'RE UP NEXT!</div>';
+
+      const info = document.createElement('div');
+      info.style.cssText = 'text-align: center; margin-bottom: 1rem; font-size: 0.9rem; color: #5C5F7B;';
+      info.textContent = `Previous performer has been singing for ${Math.floor(elapsedMinutes)} minutes`;
+
+      const startBtn = document.createElement('button');
+      startBtn.className = 'btn btn-block';
+      startBtn.style.cssText = 'background: linear-gradient(135deg, #FF9F1C, #FF6B6B); font-size: 1.25rem; padding: 1rem;';
+      startBtn.textContent = '🎤 START MY SONG NOW!';
+      startBtn.addEventListener('click', startMySong);
+
+      performerActions.appendChild(header);
+      performerActions.appendChild(info);
+      performerActions.appendChild(startBtn);
+    } else {
+      // Still waiting
+      performerActions.style.background = 'linear-gradient(135deg, rgba(76, 201, 240, 0.1), rgba(67, 97, 238, 0.1))';
+      performerActions.style.border = '2px solid #4CC9F0';
+
+      const remainingMs = (SONG_TIMEOUT_MINUTES * 60 * 1000) - elapsedMs;
+      const remainingMinutes = Math.floor(remainingMs / 60000);
+      const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
+
+      const header = document.createElement('div');
+      header.style.cssText = 'text-align: center; margin-bottom: 1rem;';
+      header.innerHTML = '<div style="font-size: 2rem;">⏳</div><div style="font-size: 1.25rem; font-weight: 700; color: #4361EE;">YOU\'RE UP NEXT!</div>';
+
+      const info = document.createElement('div');
+      info.style.cssText = 'text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; color: #5C5F7B;';
+      info.textContent = `${currentlyPlaying.guestName} is performing`;
+
+      const countdown = document.createElement('div');
+      countdown.style.cssText = 'text-align: center; font-size: 1rem; color: #4361EE; font-weight: 600;';
+      countdown.textContent = `Can take over in ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+
+      performerActions.appendChild(header);
+      performerActions.appendChild(info);
+      performerActions.appendChild(countdown);
+
+      // Update countdown every second
+      setTimeout(() => updatePerformerStatus(), 1000);
+    }
   } else {
     // Hide if not my turn
     performerActions.style.display = 'none';

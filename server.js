@@ -195,7 +195,8 @@ function getCurrentSong() {
   return {
     ...song,
     songs_completed: guest?.songsCompleted || 0,
-    is_vip: guest?.isVip || false
+    is_vip: guest?.isVip || false,
+    startedAt: song.startedAt
   };
 }
 
@@ -345,6 +346,7 @@ app.post('/api/songs', (req, res) => {
     status: 'queued',
     positionOverride: null,
     submittedAt: new Date().toISOString(),
+    startedAt: null,
     completedAt: null
   };
 
@@ -396,6 +398,7 @@ app.post('/api/kj/advance', (req, res) => {
     const song = store.songs.find(s => s.id === next.id);
     if (song) {
       song.status = 'current';
+      song.startedAt = new Date().toISOString();
     }
     store.stats.currentSongId = next.id;
 
@@ -404,7 +407,7 @@ app.post('/api/kj/advance', (req, res) => {
     const roast = generateRoast(next.guestName, next.songTitle, guest?.isVip, guest?.songsCompleted || 0);
 
     io.emit('now-playing', {
-      song: next,
+      song: { ...next, startedAt: song.startedAt },
       roast,
       isVip: guest?.isVip || false
     });
@@ -436,13 +439,14 @@ app.post('/api/kj/skip', (req, res) => {
     const song = store.songs.find(s => s.id === next.id);
     if (song) {
       song.status = 'current';
+      song.startedAt = new Date().toISOString();
     }
 
     const guest = store.guests.get(next.guestId);
     const roast = generateRoast(next.guestName, next.songTitle, guest?.isVip, guest?.songsCompleted || 0);
 
     io.emit('now-playing', {
-      song: next,
+      song: { ...next, startedAt: song.startedAt },
       roast,
       isVip: guest?.isVip || false
     });
@@ -497,13 +501,14 @@ app.post('/api/kj/start', (req, res) => {
     const song = store.songs.find(s => s.id === first.id);
     if (song) {
       song.status = 'current';
+      song.startedAt = new Date().toISOString();
     }
 
     const guest = store.guests.get(first.guestId);
     const roast = generateRoast(first.guestName, first.songTitle, guest?.isVip, guest?.songsCompleted || 0);
 
     io.emit('now-playing', {
-      song: first,
+      song: { ...first, startedAt: song.startedAt },
       roast,
       isVip: guest?.isVip || false
     });
@@ -540,6 +545,9 @@ app.post('/api/kj/reset', (req, res) => {
   res.json({ success: true, message: 'Party reset! Ready for a fresh start.' });
 });
 
+// Timeout in minutes before next performer can override
+const SONG_TIMEOUT_MINUTES = 5;
+
 // Guest starts their own song (self-service flow)
 app.post('/api/song/start', (req, res) => {
   const { deviceId, songId } = req.body;
@@ -551,12 +559,6 @@ app.post('/api/song/start', (req, res) => {
   const guest = store.guests.get(deviceId);
   if (!guest) {
     return res.status(400).json({ error: 'Guest not found' });
-  }
-
-  // Check if there's already a current song
-  const current = getCurrentSong();
-  if (current) {
-    return res.status(400).json({ error: 'Someone is already performing!' });
   }
 
   // Get the queue
@@ -571,6 +573,38 @@ app.post('/api/song/start', (req, res) => {
     return res.status(403).json({ error: "It's not your turn yet!" });
   }
 
+  // Check if there's already a current song
+  const current = getCurrentSong();
+  if (current) {
+    // Check if enough time has passed to allow override
+    const currentSongRecord = store.songs.find(s => s.id === current.id);
+    if (currentSongRecord && currentSongRecord.startedAt) {
+      const startedAt = new Date(currentSongRecord.startedAt);
+      const elapsedMinutes = (Date.now() - startedAt.getTime()) / 1000 / 60;
+
+      if (elapsedMinutes >= SONG_TIMEOUT_MINUTES) {
+        // Auto-complete the previous song
+        currentSongRecord.status = 'completed';
+        currentSongRecord.completedAt = new Date().toISOString();
+
+        // Increment previous performer's song count
+        const prevGuest = store.guests.get(current.guestId);
+        if (prevGuest) {
+          prevGuest.songsCompleted++;
+        }
+        store.stats.totalSongsPlayed++;
+      } else {
+        const remainingMinutes = Math.ceil(SONG_TIMEOUT_MINUTES - elapsedMinutes);
+        return res.status(400).json({
+          error: `Someone is still performing! You can take over in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`,
+          canOverrideAt: new Date(startedAt.getTime() + SONG_TIMEOUT_MINUTES * 60 * 1000).toISOString()
+        });
+      }
+    } else {
+      return res.status(400).json({ error: 'Someone is already performing!' });
+    }
+  }
+
   // If songId provided, make sure it matches the first song
   if (songId && firstSong.id !== songId) {
     return res.status(400).json({ error: 'This is not your next song' });
@@ -580,6 +614,7 @@ app.post('/api/song/start', (req, res) => {
   const song = store.songs.find(s => s.id === firstSong.id);
   if (song) {
     song.status = 'current';
+    song.startedAt = new Date().toISOString();
   }
   store.stats.currentSongId = firstSong.id;
 
@@ -587,7 +622,7 @@ app.post('/api/song/start', (req, res) => {
   const roast = generateRoast(firstSong.guestName, firstSong.songTitle, guest.isVip, guest.songsCompleted);
 
   io.emit('now-playing', {
-    song: firstSong,
+    song: { ...firstSong, startedAt: song.startedAt },
     roast,
     isVip: guest.isVip || false
   });
