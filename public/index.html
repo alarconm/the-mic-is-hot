@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Mic Is Hot - Kristin's Birthday Karaoke</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    .landing-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F5 30%, #F0F4FF 70%, #F8F6FF 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background shapes */
+    .landing-page::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(247, 37, 133, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      top: -200px;
+      right: -200px;
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    .landing-page::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(76, 201, 240, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      bottom: -150px;
+      left: -150px;
+      animation: float2 25s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-50px, 50px) scale(1.1); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(50px, -50px) scale(1.1); }
+    }
+
+    .landing-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .landing-logo {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .landing-title {
+      font-size: 4rem;
+      font-weight: 900;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #FF6B6B, #F72585, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.03em;
+    }
+
+    .landing-subtitle {
+      font-size: 1.75rem;
+      color: #2D3047;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .landing-party-info {
+      font-size: 1.25rem;
+      color: #5C5F7B;
+      margin-bottom: 2.5rem;
+      font-weight: 500;
+    }
+
+    .scan-instruction {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #F72585, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .qr-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 32px;
+      margin-bottom: 2.5rem;
+      box-shadow:
+        0 20px 60px rgba(114, 9, 183, 0.15),
+        0 8px 24px rgba(247, 37, 133, 0.1);
+      border: 3px solid rgba(247, 37, 133, 0.1);
+      animation: glow 3s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 20px 60px rgba(114, 9, 183, 0.15), 0 8px 24px rgba(247, 37, 133, 0.1); }
+      50% { box-shadow: 0 25px 70px rgba(114, 9, 183, 0.2), 0 10px 30px rgba(247, 37, 133, 0.15); }
+    }
+
+    .qr-section img,
+    .qr-section canvas {
+      display: block;
+      border-radius: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-links .btn {
+      min-width: 180px;
+    }
+
+    /* Fun decorative elements */
+    .sparkles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sparkle {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: twinkle 3s ease-in-out infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.2); }
+    }
+
+    .footer-tagline {
+      margin-top: 3rem;
+      font-size: 1rem;
+      color: #9094B2;
+      font-weight: 500;
+    }
+
+    .footer-tagline span {
+      color: #F72585;
+    }
+
+    @media (max-width: 768px) {
+      .landing-title {
+        font-size: 2.75rem;
+      }
+      .landing-subtitle {
+        font-size: 1.25rem;
+      }
+      .landing-logo {
+        font-size: 3.5rem;
+      }
+      .nav-links {
+        flex-direction: column;
+        width: 100%;
+        padding: 0 1rem;
+      }
+      .nav-links .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-page">
+    <!-- Sparkle decorations -->
+    <div class="sparkles">
+      <span class="sparkle" style="top: 10%; left: 15%; animation-delay: 0s;">✨</span>
+      <span class="sparkle" style="top: 20%; right: 20%; animation-delay: 0.5s;">🌟</span>
+      <span class="sparkle" style="top: 60%; left: 10%; animation-delay: 1s;">✨</span>
+      <span class="sparkle" style="top: 70%; right: 15%; animation-delay: 1.5s;">💫</span>
+      <span class="sparkle" style="top: 85%; left: 25%; animation-delay: 2s;">🌟</span>
+      <span class="sparkle" style="top: 30%; right: 10%; animation-delay: 2.5s;">✨</span>
+    </div>
+
+    <div class="landing-content">
+      <div class="landing-logo">🎤🔥</div>
+      <h1 class="landing-title">The Mic Is Hot</h1>
+      <p class="landing-subtitle">Kristin's Birthday Karaoke Bash</p>
+      <p class="landing-party-info">February 21st, 2026</p>
+
+      <p class="scan-instruction">📱 Scan to join the party!</p>
+
+      <div class="qr-section">
+        <div id="qrcode"></div>
+      </div>
+
+      <div class="nav-links">
+        <a href="/guest" class="btn btn-hot btn-lg">
+          📱 Guest Sign-Up
+        </a>
+        <a href="/display" class="btn btn-outline btn-lg">
+          📺 Party Display
+        </a>
+        <a href="/kj" class="btn btn-ghost btn-lg">
+          🎛️ KJ Controls
+        </a>
+      </div>
+
+      <p class="footer-tagline">Get ready to <span>slay</span> the stage! 🎶</p>
+    </div>
+  </div>
+
+  <script>
+    // Generate QR code pointing to the guest page
+    const baseUrl = window.location.origin;
+    const guestUrl = `${baseUrl}/guest`;
+
+    new QRCode(document.getElementById('qrcode'), {
+      text: guestUrl,
+      width: 250,
+      height: 250,
+      colorDark: '#7209B7',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    console.log('QR code generated for:', guestUrl);
+  </script>
+</body>
+</html>

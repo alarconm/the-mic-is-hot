@@ -1,0 +1,14 @@
+run = "npm start"
+entrypoint = "server.js"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
+
+[[ports]]
+localPort = 3333
+externalPort = 80

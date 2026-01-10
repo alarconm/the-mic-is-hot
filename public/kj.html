@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KJ Controls - The Mic Is Hot</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .kj-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F5 30%, #F0F4FF 70%, #F8F6FF 100%);
+    }
+
+    .kj-main {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .kj-sidebar {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 1.5rem;
+      border-left: 1px solid rgba(114, 9, 183, 0.1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 32px rgba(114, 9, 183, 0.08);
+    }
+
+    .kj-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .kj-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2D3047;
+    }
+
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .status-live {
+      background: rgba(6, 214, 160, 0.2);
+      color: #06D6A0;
+      animation: pulse 2s infinite;
+    }
+
+    .status-paused {
+      background: rgba(255, 217, 61, 0.2);
+      color: #FF9F1C;
+    }
+
+    .status-waiting {
+      background: rgba(114, 9, 183, 0.1);
+      color: #5C5F7B;
+    }
+
+    .now-playing-card {
+      background: linear-gradient(135deg, rgba(247, 37, 133, 0.15), rgba(255, 107, 107, 0.1));
+      border: 2px solid #F72585;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 24px rgba(247, 37, 133, 0.15);
+    }
+
+    .now-playing-card.vip {
+      border-color: #FFD93D;
+      background: linear-gradient(135deg, rgba(255, 217, 61, 0.2), rgba(255, 159, 28, 0.15));
+      box-shadow: 0 8px 24px rgba(255, 159, 28, 0.2);
+    }
+
+    .np-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #F72585;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .np-name {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+      color: #2D3047;
+    }
+
+    .np-song {
+      font-size: 1.25rem;
+      color: #5C5F7B;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(114, 9, 183, 0.15);
+      border-radius: 16px;
+      color: #2D3047;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.08);
+    }
+
+    .control-btn:hover {
+      background: rgba(247, 37, 133, 0.05);
+      border-color: rgba(247, 37, 133, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .control-btn.primary {
+      background: linear-gradient(135deg, #FF6B6B, #F72585);
+      color: white;
+      border: none;
+      grid-column: span 2;
+      box-shadow: 0 8px 24px rgba(247, 37, 133, 0.35);
+    }
+
+    .control-btn.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(247, 37, 133, 0.45);
+    }
+
+    .control-btn.success {
+      border-color: #06D6A0;
+      background: rgba(6, 214, 160, 0.1);
+      color: #059669;
+    }
+
+    .control-btn.success:hover {
+      background: rgba(6, 214, 160, 0.2);
+    }
+
+    .control-btn.warning {
+      border-color: #FF9F1C;
+      background: rgba(255, 159, 28, 0.1);
+      color: #D97706;
+    }
+
+    .control-btn.warning:hover {
+      background: rgba(255, 159, 28, 0.2);
+    }
+
+    .control-btn.danger {
+      border-color: #FF6B6B;
+      background: rgba(255, 107, 107, 0.1);
+      color: #DC2626;
+    }
+
+    .control-btn.danger:hover {
+      background: rgba(255, 107, 107, 0.2);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .control-icon {
+      font-size: 2rem;
+    }
+
+    .queue-section {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .queue-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .queue-header h2 {
+      color: #2D3047;
+    }
+
+    .queue-count {
+      background: rgba(247, 37, 133, 0.1);
+      color: #F72585;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .kj-queue-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(114, 9, 183, 0.1);
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      cursor: grab;
+      transition: all 0.2s;
+    }
+
+    .kj-queue-item:hover {
+      background: rgba(247, 37, 133, 0.05);
+      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.1);
+    }
+
+    .kj-queue-item.vip {
+      border: 2px solid #FFD93D;
+      background: rgba(255, 217, 61, 0.1);
+    }
+
+    .kj-queue-item.dragging {
+      opacity: 0.5;
+    }
+
+    .queue-position {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #4CC9F0, #4361EE);
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: white;
+    }
+
+    .queue-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .queue-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2D3047;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .queue-song {
+      font-size: 0.875rem;
+      color: #5C5F7B;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .queue-action-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 107, 107, 0.1);
+      border: none;
+      border-radius: 8px;
+      color: #DC2626;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .queue-action-btn:hover {
+      background: #FF6B6B;
+      color: white;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 1rem;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid rgba(114, 9, 183, 0.1);
+      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.06);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FF6B6B, #F72585);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #5C5F7B;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .empty-queue {
+      text-align: center;
+      padding: 2rem;
+      color: #5C5F7B;
+    }
+
+    .empty-queue p:first-child {
+      font-weight: 600;
+      color: #2D3047;
+      margin-bottom: 0.5rem;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    @media (max-width: 900px) {
+      .kj-layout {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .kj-sidebar {
+        border-left: none;
+        border-top: 1px solid rgba(114, 9, 183, 0.1);
+      }
+
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .control-btn.primary {
+        grid-column: span 1;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient">
+  <div class="kj-layout">
+    <div class="kj-main">
+      <div class="kj-header">
+        <h1 class="kj-title">🎛️ KJ Control Panel</h1>
+        <div id="status-badge" class="status-badge status-waiting">Waiting</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div id="stat-queued" class="stat-value">0</div>
+          <div class="stat-label">In Queue</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-completed" class="stat-value">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-drunk" class="stat-value">0%</div>
+          <div class="stat-label">Drunk-O-Meter</div>
+        </div>
+      </div>
+
+      <!-- Now Playing -->
+      <div id="now-playing-card" class="now-playing-card hidden">
+        <div class="np-label">🔥 NOW PERFORMING</div>
+        <div id="np-name" class="np-name">-</div>
+        <div id="np-song" class="np-song">-</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="control-grid">
+        <button id="btn-start" class="control-btn primary">
+          <span class="control-icon">▶️</span>
+          Start Party
+        </button>
+
+        <button id="btn-advance" class="control-btn success" disabled>
+          <span class="control-icon">✅</span>
+          Song Done - Next
+        </button>
+
+        <button id="btn-skip" class="control-btn warning" disabled>
+          <span class="control-icon">⏭️</span>
+          Skip Performer
+        </button>
+
+        <button id="btn-pause" class="control-btn" disabled>
+          <span class="control-icon">⏸️</span>
+          Pause Queue
+        </button>
+
+        <button id="btn-emergency" class="control-btn danger">
+          <span class="control-icon">🛑</span>
+          Emergency Stop
+        </button>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <h3 style="margin-bottom: 1rem; color: #2D3047;">Quick Links</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="/" target="_blank" class="btn btn-outline">📱 QR Code Page</a>
+          <a href="/display" target="_blank" class="btn btn-outline">📺 Party Display</a>
+          <a href="/guest" target="_blank" class="btn btn-outline">👤 Guest View</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="kj-sidebar">
+      <div class="queue-header">
+        <h2>📋 Queue</h2>
+        <span id="queue-count" class="queue-count">0 songs</span>
+      </div>
+
+      <div id="queue-list" class="queue-section">
+        <div class="empty-queue">
+          <p>No songs in queue</p>
+          <p style="font-size: 0.875rem;">Waiting for guests to sign up...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/kj.js"></script>
+</body>
+</html>

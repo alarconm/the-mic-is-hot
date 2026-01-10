@@ -1,0 +1,127 @@
+{
+  "guests": [
+    [
+      "device_9py742ydi_1768073388795",
+      {
+        "id": "device_9py742ydi_1768073388795",
+        "name": "Kristin",
+        "songsCompleted": 1,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T19:38:15.154Z"
+      }
+    ],
+    [
+      "device_45nfddtt6_1768074726655",
+      {
+        "id": "device_45nfddtt6_1768074726655",
+        "name": "Mike",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T19:52:37.994Z"
+      }
+    ],
+    [
+      "device_wfzeu11zm_1768076312014",
+      {
+        "id": "device_wfzeu11zm_1768076312014",
+        "name": "<script>alert('XSS')</script>",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:21:13.591Z"
+      }
+    ],
+    [
+      "device_g4vc8mczl_1768076270352",
+      {
+        "id": "device_g4vc8mczl_1768076270352",
+        "name": "PartyGuest1",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:20:54.373Z"
+      }
+    ],
+    [
+      "device_nf8cx9xdd_1768076380761",
+      {
+        "id": "device_nf8cx9xdd_1768076380761",
+        "name": "ThisIsAVeryLongNameThatExceedsOneHundredCharactersToTestHowTheUIHandlesExtremelLongInputsInTheNameField12345",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:22:33.791Z"
+      }
+    ],
+    [
+      "device_0nlojeb7h_1768076556187",
+      {
+        "id": "device_0nlojeb7h_1768076556187",
+        "name": "<script>alert('XSS')</script>",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:24:03.615Z"
+      }
+    ]
+  ],
+  "songs": [
+    {
+      "id": 1,
+      "guestId": "device_9py742ydi_1768073388795",
+      "guestName": "Kristin",
+      "songTitle": "Total Eclipse of the Heart",
+      "youtubeUrl": "https://www.youtube.com/watch?v=lcOxhH8N3Bo",
+      "youtubeId": "lcOxhH8N3Bo",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T19:38:53.904Z",
+      "completedAt": "2026-01-10T20:03:32.830Z"
+    },
+    {
+      "id": 2,
+      "guestId": "device_45nfddtt6_1768074726655",
+      "guestName": "Mike",
+      "songTitle": "Don't Stop Believin'",
+      "youtubeUrl": "https://www.youtube.com/watch?v=1k8craCGpgs",
+      "youtubeId": "1k8craCGpgs",
+      "status": "current",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T19:53:02.334Z",
+      "completedAt": null
+    },
+    {
+      "id": 3,
+      "guestId": "device_wfzeu11zm_1768076312014",
+      "guestName": "TestUser1",
+      "songTitle": "Bohemian Rhapsody",
+      "youtubeUrl": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+      "youtubeId": "fJ9rUzIMcZQ",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:19:58.430Z",
+      "completedAt": null
+    },
+    {
+      "id": 4,
+      "guestId": "device_wfzeu11zm_1768076312014",
+      "guestName": "<script>alert('XSS')</script>",
+      "songTitle": "<img onerror=alert(1) src=x>",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:21:41.122Z",
+      "completedAt": null
+    }
+  ],
+  "songIdCounter": 5,
+  "stats": {
+    "totalSongsPlayed": 1,
+    "partyStartedAt": "2026-01-10T19:28:58.579Z",
+    "isPaused": false,
+    "currentSongId": 2
+  }
+}

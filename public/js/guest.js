@@ -1,0 +1,526 @@
+// THE MIC IS HOT - Guest Mobile Experience
+
+const socket = io();
+
+// State
+let deviceId = localStorage.getItem('micIsHot_deviceId');
+let guest = null;
+let currentQueue = [];
+let mySongs = [];
+
+// Loading messages for fun
+const loadingMessages = [
+  "Warming up the vocal cords...",
+  "Judging your song choice...",
+  "Alerting the neighbors...",
+  "Preparing for auditory assault...",
+  "Lowering expectations...",
+  "Charging the drunk-o-meter...",
+  "Waking up the karaoke gods...",
+];
+
+// HTML escape function to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Generate device ID if not exists
+if (!deviceId) {
+  deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+  localStorage.setItem('micIsHot_deviceId', deviceId);
+}
+
+// DOM Elements
+const registrationView = document.getElementById('registration-view');
+const mainView = document.getElementById('main-view');
+const registerForm = document.getElementById('register-form');
+const guestNameInput = document.getElementById('guest-name');
+const displayName = document.getElementById('display-name');
+const songForm = document.getElementById('song-form');
+const songTitleInput = document.getElementById('song-title');
+const youtubeUrlInput = document.getElementById('youtube-url');
+const searchYoutubeBtn = document.getElementById('search-youtube-btn');
+const youtubeModal = document.getElementById('youtube-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const youtubeSearchInput = document.getElementById('youtube-search-input');
+const youtubeResults = document.getElementById('youtube-results');
+const queueList = document.getElementById('queue-list');
+const mySongsList = document.getElementById('my-songs-list');
+const videoPreview = document.getElementById('video-preview');
+const previewThumb = document.getElementById('preview-thumb');
+const previewTitle = document.getElementById('preview-title');
+const vipBanner = document.getElementById('vip-banner');
+const vipSkipSection = document.getElementById('vip-skip-section');
+const vipSkipBtn = document.getElementById('vip-skip-btn');
+const myPosition = document.getElementById('my-position');
+const positionNum = document.getElementById('position-num');
+
+// Tab handling
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+
+    btn.classList.add('active');
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+  });
+});
+
+// Check if already registered
+async function checkRegistration() {
+  try {
+    const response = await fetch(`/api/guest/${deviceId}`);
+    const data = await response.json();
+
+    if (data.guest) {
+      guest = data.guest;
+      mySongs = data.songs || [];
+      showMainView();
+    }
+  } catch (error) {
+    console.error('Error checking registration:', error);
+  }
+}
+
+// Show main view after registration
+function showMainView() {
+  registrationView.classList.add('hidden');
+  mainView.classList.remove('hidden');
+  displayName.textContent = guest.name;
+
+  // VIP handling
+  if (guest.is_vip) {
+    vipBanner.classList.remove('hidden');
+    vipSkipSection.classList.remove('hidden');
+
+    if (guest.skip_used) {
+      vipSkipBtn.textContent = 'Skip Power Used ✓';
+      vipSkipBtn.disabled = true;
+    }
+  }
+
+  renderMySongs();
+}
+
+// Registration form
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = guestNameInput.value.trim();
+
+  if (!name) return;
+
+  try {
+    const response = await fetch('/api/guest/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId, name })
+    });
+
+    const data = await response.json();
+
+    if (data.guest) {
+      guest = data.guest;
+      showMainView();
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    alert('Oops! Something went wrong. Try again?');
+  }
+});
+
+// Song submission form
+songForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const songTitle = songTitleInput.value.trim();
+  const youtubeUrl = youtubeUrlInput.value.trim();
+
+  if (!songTitle || !youtubeUrl) return;
+
+  // Validate YouTube URL
+  const youtubeId = extractYouTubeId(youtubeUrl);
+  if (!youtubeId) {
+    alert('Please enter a valid YouTube URL!');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/songs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId, songTitle, youtubeUrl })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Clear form
+      songTitleInput.value = '';
+      youtubeUrlInput.value = '';
+      videoPreview.classList.add('hidden');
+
+      // Show success feedback
+      showToast('Song added to the queue! 🎤');
+
+      // Switch to queue tab
+      document.querySelector('[data-tab="queue"]').click();
+    } else {
+      alert(data.error || 'Failed to add song');
+    }
+  } catch (error) {
+    console.error('Submit song error:', error);
+    alert('Oops! Something went wrong.');
+  }
+});
+
+// YouTube search modal
+searchYoutubeBtn.addEventListener('click', () => {
+  youtubeModal.classList.add('active');
+  youtubeSearchInput.value = songTitleInput.value + ' karaoke';
+  youtubeSearchInput.focus();
+
+  if (youtubeSearchInput.value.trim()) {
+    searchYouTube(youtubeSearchInput.value);
+  }
+});
+
+closeModalBtn.addEventListener('click', () => {
+  youtubeModal.classList.remove('active');
+});
+
+// YouTube search
+let searchTimeout;
+youtubeSearchInput.addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    if (e.target.value.trim()) {
+      searchYouTube(e.target.value);
+    }
+  }, 500);
+});
+
+function searchYouTube(query) {
+  // Clear and rebuild with safe DOM methods
+  youtubeResults.textContent = '';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const tip = document.createElement('p');
+  tip.style.marginBottom = '1rem';
+  tip.innerHTML = '<strong>Quick tip:</strong> Open YouTube in another tab, find your karaoke video, then copy the URL and paste it back here!';
+
+  const link = document.createElement('a');
+  link.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+  link.target = '_blank';
+  link.className = 'btn btn-hot btn-block';
+  link.textContent = `Search "${query}" on YouTube ↗`;
+
+  card.appendChild(tip);
+  card.appendChild(link);
+
+  const subtext = document.createElement('p');
+  subtext.style.cssText = 'text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem;';
+  subtext.textContent = 'After you find your video, copy the URL and paste it in the form!';
+
+  youtubeResults.appendChild(card);
+  youtubeResults.appendChild(subtext);
+}
+
+// Video preview when URL is pasted
+youtubeUrlInput.addEventListener('input', (e) => {
+  const url = e.target.value;
+  const videoId = extractYouTubeId(url);
+
+  if (videoId) {
+    previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    previewTitle.textContent = 'Video found! ✓';
+    videoPreview.classList.remove('hidden');
+  } else {
+    videoPreview.classList.add('hidden');
+  }
+});
+
+// Extract YouTube video ID
+function extractYouTubeId(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// Render queue using safe DOM methods
+function renderQueue(queue) {
+  queueList.textContent = '';
+
+  if (!queue || queue.length === 0) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = `
+      <div class="empty-state-icon">🎤</div>
+      <div class="empty-state-title">No songs in queue!</div>
+      <p>Be the first to sign up!</p>
+    `;
+    queueList.appendChild(emptyState);
+    myPosition.classList.add('hidden');
+    return;
+  }
+
+  // Find my position
+  let myNextPosition = -1;
+  for (let i = 0; i < queue.length; i++) {
+    if (queue[i].guest_id === deviceId) {
+      myNextPosition = i + 1;
+      break;
+    }
+  }
+
+  if (myNextPosition > 0) {
+    positionNum.textContent = myNextPosition;
+    myPosition.classList.remove('hidden');
+  } else {
+    myPosition.classList.add('hidden');
+  }
+
+  queue.slice(0, 10).forEach((song, index) => {
+    const item = document.createElement('div');
+    item.className = 'queue-item animate-in';
+    if (song.guestId === deviceId) item.classList.add('current');
+    if (song.is_vip) item.classList.add('vip');
+
+    const position = document.createElement('div');
+    position.className = 'queue-position';
+    position.textContent = index + 1;
+
+    const info = document.createElement('div');
+    info.className = 'queue-info';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'queue-name';
+    nameDiv.textContent = song.guestName;
+
+    if (song.is_vip) {
+      const badge = document.createElement('span');
+      badge.className = 'vip-badge';
+      badge.textContent = '👑 VIP';
+      nameDiv.appendChild(badge);
+    }
+
+    const songDiv = document.createElement('div');
+    songDiv.className = 'queue-song';
+    songDiv.textContent = song.songTitle;
+
+    info.appendChild(nameDiv);
+    info.appendChild(songDiv);
+
+    item.appendChild(position);
+    item.appendChild(info);
+    queueList.appendChild(item);
+  });
+
+  if (queue.length > 10) {
+    const more = document.createElement('div');
+    more.style.cssText = 'text-align: center; padding: 1rem; color: var(--text-muted);';
+    more.textContent = `+${queue.length - 10} more in queue`;
+    queueList.appendChild(more);
+  }
+}
+
+// Render my songs using safe DOM methods
+function renderMySongs() {
+  mySongsList.textContent = '';
+
+  if (!mySongs || mySongs.length === 0) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = `
+      <div class="empty-state-icon">🎤</div>
+      <div class="empty-state-title">No songs yet!</div>
+      <p>Add a song to see it here</p>
+    `;
+    mySongsList.appendChild(emptyState);
+    return;
+  }
+
+  mySongs.forEach(song => {
+    let statusClass = 'status-queued';
+    let statusText = 'In Queue';
+
+    if (song.status === 'current') {
+      statusClass = 'status-current';
+      statusText = "You're Up!";
+    } else if (song.status === 'completed') {
+      statusClass = 'status-completed';
+      statusText = 'Done';
+    } else if (song.status === 'skipped') {
+      statusClass = 'status-completed';
+      statusText = 'Skipped';
+    }
+
+    const item = document.createElement('div');
+    item.className = 'my-song-item animate-in';
+
+    const titleWrapper = document.createElement('div');
+    const title = document.createElement('div');
+    title.style.fontWeight = '600';
+    title.textContent = song.songTitle;
+    titleWrapper.appendChild(title);
+
+    const status = document.createElement('span');
+    status.className = `my-song-status ${statusClass}`;
+    status.textContent = statusText;
+
+    item.appendChild(titleWrapper);
+    item.appendChild(status);
+    mySongsList.appendChild(item);
+  });
+}
+
+// Reaction buttons
+document.querySelectorAll('.reaction-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const emoji = btn.dataset.emoji;
+
+    try {
+      await fetch('/api/reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji, guestName: guest?.name })
+      });
+
+      // Visual feedback
+      btn.style.transform = 'scale(1.5)';
+      setTimeout(() => btn.style.transform = '', 200);
+    } catch (error) {
+      console.error('Reaction error:', error);
+    }
+  });
+});
+
+// VIP Skip button
+vipSkipBtn.addEventListener('click', async () => {
+  // Find user's first queued song
+  const myQueuedSong = currentQueue.find(s => s.guest_id === deviceId);
+
+  if (!myQueuedSong) {
+    alert('You need a song in the queue first!');
+    return;
+  }
+
+  if (!confirm('Use your ONE-TIME skip power to jump to the front?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/vip/skip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId, songId: myQueuedSong.id })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      vipSkipBtn.textContent = 'Skip Power Used ✓';
+      vipSkipBtn.disabled = true;
+      showToast('👑 VIP SKIP ACTIVATED! You\'re next!');
+    } else {
+      alert(data.error || 'Skip failed');
+    }
+  } catch (error) {
+    console.error('VIP skip error:', error);
+  }
+});
+
+// Socket events
+socket.on('queue-updated', (data) => {
+  currentQueue = data.queue;
+  renderQueue(data.queue);
+
+  // Update my songs from queue
+  if (guest) {
+    fetch(`/api/guest/${deviceId}`)
+      .then(r => r.json())
+      .then(d => {
+        mySongs = d.songs || [];
+        renderMySongs();
+
+        // Enable VIP skip if has queued songs
+        if (guest.is_vip && !guest.skip_used) {
+          const hasQueuedSong = mySongs.some(s => s.status === 'queued');
+          vipSkipBtn.disabled = !hasQueuedSong;
+        }
+      });
+  }
+});
+
+socket.on('now-playing', (data) => {
+  if (data.song.guestId === deviceId) {
+    showToast("🎤 IT'S YOUR TURN! GET UP THERE!");
+  }
+});
+
+socket.on('vip-skip', (data) => {
+  showToast(`👑 ${data.guestName} used VIP SKIP!`);
+});
+
+// Toast notification
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #F72585, #7209B7);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+    box-shadow: 0 8px 32px rgba(247, 37, 133, 0.4);
+    text-align: center;
+    max-width: 90%;
+    font-weight: 600;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Add fadeOut animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  }
+`;
+document.head.appendChild(style);
+
+// Initialize
+checkRegistration();
+
+// Fun: Random loading message
+function setRandomLoadingMessage() {
+  const loadingTexts = document.querySelectorAll('.loading-messages');
+  loadingTexts.forEach(el => {
+    el.textContent = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+  });
+}
+setRandomLoadingMessage();

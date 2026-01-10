@@ -1,0 +1,903 @@
+{
+  "guests": [
+    [
+      "device_9py742ydi_1768073388795",
+      {
+        "id": "device_9py742ydi_1768073388795",
+        "name": "Kristin",
+        "songsCompleted": 1,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T19:38:15.154Z"
+      }
+    ],
+    [
+      "device_45nfddtt6_1768074726655",
+      {
+        "id": "device_45nfddtt6_1768074726655",
+        "name": "Mike",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T19:52:37.994Z"
+      }
+    ],
+    [
+      "device_wfzeu11zm_1768076312014",
+      {
+        "id": "device_wfzeu11zm_1768076312014",
+        "name": "<script>alert('XSS')</script>",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:21:13.591Z"
+      }
+    ],
+    [
+      "device_g4vc8mczl_1768076270352",
+      {
+        "id": "device_g4vc8mczl_1768076270352",
+        "name": "PartyGuest1",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:20:54.373Z"
+      }
+    ],
+    [
+      "device_nf8cx9xdd_1768076380761",
+      {
+        "id": "device_nf8cx9xdd_1768076380761",
+        "name": "ThisIsAVeryLongNameThatExceedsOneHundredCharactersToTestHowTheUIHandlesExtremelLongInputsInTheNameField12345",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:22:33.791Z"
+      }
+    ],
+    [
+      "device_0nlojeb7h_1768076556187",
+      {
+        "id": "device_0nlojeb7h_1768076556187",
+        "name": "TestUser",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:14.629Z"
+      }
+    ],
+    [
+      "test_guest_a",
+      {
+        "id": "test_guest_a",
+        "name": "GuestA",
+        "songsCompleted": 6,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:01.641Z"
+      }
+    ],
+    [
+      "test_guest_b",
+      {
+        "id": "test_guest_b",
+        "name": "GuestB",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:01.755Z"
+      }
+    ],
+    [
+      "test_guest_c",
+      {
+        "id": "test_guest_c",
+        "name": "GuestC",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:01.866Z"
+      }
+    ],
+    [
+      "test_mic_hog",
+      {
+        "id": "test_mic_hog",
+        "name": "MicHogTest",
+        "songsCompleted": 3,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:15.218Z"
+      }
+    ],
+    [
+      "test_one_hit",
+      {
+        "id": "test_one_hit",
+        "name": "OneHitTest",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:15.250Z"
+      }
+    ],
+    [
+      "test_one_hit_2",
+      {
+        "id": "test_one_hit_2",
+        "name": "OneHitTest2",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:25:15.286Z"
+      }
+    ],
+    [
+      "test_guest_d",
+      {
+        "id": "test_guest_d",
+        "name": "GuestD",
+        "songsCompleted": 2,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:27:47.653Z"
+      }
+    ],
+    [
+      "test_cap",
+      {
+        "id": "test_cap",
+        "name": "CapTester",
+        "songsCompleted": 10,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:26:18.271Z"
+      }
+    ],
+    [
+      "device_hy4hwu3lw_1768076784588",
+      {
+        "id": "device_hy4hwu3lw_1768076784588",
+        "name": "kristin",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:26:39.688Z"
+      }
+    ],
+    [
+      "device_bipq6q36z_1768076860425",
+      {
+        "id": "device_bipq6q36z_1768076860425",
+        "name": "<h1>Big Text</h1>",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:27:54.645Z"
+      }
+    ],
+    [
+      "test_ekgmqwgd7",
+      {
+        "id": "test_ekgmqwgd7",
+        "name": "KRISTIN",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:10.437Z"
+      }
+    ],
+    [
+      "test_xp6mkj11y",
+      {
+        "id": "test_xp6mkj11y",
+        "name": "Kristin Smith",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:10.439Z"
+      }
+    ],
+    [
+      "test_yno08ydwo",
+      {
+        "id": "test_yno08ydwo",
+        "name": "Birthday Girl Kristin",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:10.441Z"
+      }
+    ],
+    [
+      "test_enp7fykuz",
+      {
+        "id": "test_enp7fykuz",
+        "name": "Kristy",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:10.443Z"
+      }
+    ],
+    [
+      "test_y0l4wfp4a",
+      {
+        "id": "test_y0l4wfp4a",
+        "name": "Chris",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:10.444Z"
+      }
+    ],
+    [
+      "test2_guest_e_1768076911108",
+      {
+        "id": "test2_guest_e_1768076911108",
+        "name": "GuestE",
+        "songsCompleted": 2,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:31.108Z"
+      }
+    ],
+    [
+      "test2_guest_f_1768076911108",
+      {
+        "id": "test2_guest_f_1768076911108",
+        "name": "GuestF",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:31.171Z"
+      }
+    ],
+    [
+      "vip_test_1768076917751",
+      {
+        "id": "vip_test_1768076917751",
+        "name": "Kristin Party",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:37.752Z"
+      }
+    ],
+    [
+      "test3_g_1768076936485",
+      {
+        "id": "test3_g_1768076936485",
+        "name": "GuestG",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:56.487Z"
+      }
+    ],
+    [
+      "test3_h_1768076936485",
+      {
+        "id": "test3_h_1768076936485",
+        "name": "GuestH",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:56.492Z"
+      }
+    ],
+    [
+      "test3_i_1768076936485",
+      {
+        "id": "test3_i_1768076936485",
+        "name": "GuestI",
+        "songsCompleted": 1,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:28:56.496Z"
+      }
+    ],
+    [
+      "test4_regular_1_1768076983325",
+      {
+        "id": "test4_regular_1_1768076983325",
+        "name": "Regular1",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:29:43.327Z"
+      }
+    ],
+    [
+      "test4_regular_2_1768076983325",
+      {
+        "id": "test4_regular_2_1768076983325",
+        "name": "Regular2",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:29:43.380Z"
+      }
+    ],
+    [
+      "test4_regular_3_1768076983325",
+      {
+        "id": "test4_regular_3_1768076983325",
+        "name": "Regular3",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:29:43.429Z"
+      }
+    ],
+    [
+      "test4_regular_4_1768076983325",
+      {
+        "id": "test4_regular_4_1768076983325",
+        "name": "Regular4",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:29:43.475Z"
+      }
+    ],
+    [
+      "test4_regular_5_1768076983325",
+      {
+        "id": "test4_regular_5_1768076983325",
+        "name": "Regular5",
+        "songsCompleted": 0,
+        "isVip": false,
+        "skipUsed": false,
+        "createdAt": "2026-01-10T20:29:43.521Z"
+      }
+    ],
+    [
+      "test4_vip_kristin_1768076983325",
+      {
+        "id": "test4_vip_kristin_1768076983325",
+        "name": "Kristin VIP",
+        "songsCompleted": 1,
+        "isVip": true,
+        "skipUsed": true,
+        "createdAt": "2026-01-10T20:29:43.570Z"
+      }
+    ],
+    [
+      "device_6z4wpw0ff_1768077132317",
+      {
+        "id": "device_6z4wpw0ff_1768077132317",
+        "name": "Kristin Birthday Girl",
+        "songsCompleted": 0,
+        "isVip": true,
+        "skipUsed": true,
+        "createdAt": "2026-01-10T20:32:31.401Z"
+      }
+    ]
+  ],
+  "songs": [
+    {
+      "id": 1,
+      "guestId": "device_9py742ydi_1768073388795",
+      "guestName": "Kristin",
+      "songTitle": "Total Eclipse of the Heart",
+      "youtubeUrl": "https://www.youtube.com/watch?v=lcOxhH8N3Bo",
+      "youtubeId": "lcOxhH8N3Bo",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T19:38:53.904Z",
+      "completedAt": "2026-01-10T20:03:32.830Z"
+    },
+    {
+      "id": 2,
+      "guestId": "device_45nfddtt6_1768074726655",
+      "guestName": "Mike",
+      "songTitle": "Don't Stop Believin'",
+      "youtubeUrl": "https://www.youtube.com/watch?v=1k8craCGpgs",
+      "youtubeId": "1k8craCGpgs",
+      "status": "skipped",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T19:53:02.334Z",
+      "completedAt": "2026-01-10T20:24:47.619Z"
+    },
+    {
+      "id": 6,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a1",
+      "youtubeId": "test_a1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:01.750Z",
+      "completedAt": "2026-01-10T20:25:26.474Z"
+    },
+    {
+      "id": 7,
+      "guestId": "test_guest_b",
+      "guestName": "GuestB",
+      "songTitle": "Song B1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_b1",
+      "youtubeId": "test_b1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:01.862Z",
+      "completedAt": "2026-01-10T20:25:26.484Z"
+    },
+    {
+      "id": 8,
+      "guestId": "test_guest_c",
+      "guestName": "GuestC",
+      "songTitle": "Song C1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_c1",
+      "youtubeId": "test_c1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:01.972Z",
+      "completedAt": "2026-01-10T20:25:26.493Z"
+    },
+    {
+      "id": 9,
+      "guestId": "test_mic_hog",
+      "guestName": "MicHogTest",
+      "songTitle": "Mic Hog Song 1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=mh1",
+      "youtubeId": "mh1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:24.383Z",
+      "completedAt": "2026-01-10T20:25:26.517Z"
+    },
+    {
+      "id": 10,
+      "guestId": "test_mic_hog",
+      "guestName": "MicHogTest",
+      "songTitle": "Mic Hog Song 2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=mh2",
+      "youtubeId": "mh2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:24.430Z",
+      "completedAt": "2026-01-10T20:25:56.627Z"
+    },
+    {
+      "id": 11,
+      "guestId": "test_mic_hog",
+      "guestName": "MicHogTest",
+      "songTitle": "Mic Hog Song 3",
+      "youtubeUrl": "https://www.youtube.com/watch?v=mh3",
+      "youtubeId": "mh3",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:24.473Z",
+      "completedAt": "2026-01-10T20:26:08.750Z"
+    },
+    {
+      "id": 12,
+      "guestId": "test_one_hit",
+      "guestName": "OneHitTest",
+      "songTitle": "One Hit Wonder 1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=oh1",
+      "youtubeId": "oh1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:24.509Z",
+      "completedAt": "2026-01-10T20:25:56.590Z"
+    },
+    {
+      "id": 13,
+      "guestId": "test_one_hit_2",
+      "guestName": "OneHitTest2",
+      "songTitle": "One Hit Wonder 2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=oh2",
+      "youtubeId": "oh2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:24.547Z",
+      "completedAt": "2026-01-10T20:25:56.594Z"
+    },
+    {
+      "id": 14,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a2",
+      "youtubeId": "test_a2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:26.503Z",
+      "completedAt": "2026-01-10T20:26:08.467Z"
+    },
+    {
+      "id": 15,
+      "guestId": "test_guest_d",
+      "guestName": "GuestD",
+      "songTitle": "Song D1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_d1",
+      "youtubeId": "test_d1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:26.635Z",
+      "completedAt": "2026-01-10T20:25:56.607Z"
+    },
+    {
+      "id": 16,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A3",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a3",
+      "youtubeId": "test_a3",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:26.747Z",
+      "completedAt": "2026-01-10T20:26:08.939Z"
+    },
+    {
+      "id": 17,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a2",
+      "youtubeId": "test_a2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:56.617Z",
+      "completedAt": "2026-01-10T20:26:09.129Z"
+    },
+    {
+      "id": 18,
+      "guestId": "test_guest_d",
+      "guestName": "GuestD",
+      "songTitle": "Song D1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_d1",
+      "youtubeId": "test_d1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:56.755Z",
+      "completedAt": "2026-01-10T20:26:08.610Z"
+    },
+    {
+      "id": 19,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A3",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a3",
+      "youtubeId": "test_a3",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:25:56.861Z",
+      "completedAt": "2026-01-10T20:26:09.275Z"
+    },
+    {
+      "id": 20,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap1",
+      "youtubeId": "cap1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.301Z",
+      "completedAt": "2026-01-10T20:26:31.883Z"
+    },
+    {
+      "id": 21,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap2",
+      "youtubeId": "cap2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.331Z",
+      "completedAt": "2026-01-10T20:26:32.575Z"
+    },
+    {
+      "id": 22,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 3",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap3",
+      "youtubeId": "cap3",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.364Z",
+      "completedAt": "2026-01-10T20:26:32.824Z"
+    },
+    {
+      "id": 23,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 4",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap4",
+      "youtubeId": "cap4",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.399Z",
+      "completedAt": "2026-01-10T20:26:33.056Z"
+    },
+    {
+      "id": 24,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 5",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap5",
+      "youtubeId": "cap5",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.436Z",
+      "completedAt": "2026-01-10T20:26:33.276Z"
+    },
+    {
+      "id": 25,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 6",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap6",
+      "youtubeId": "cap6",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.477Z",
+      "completedAt": "2026-01-10T20:26:33.507Z"
+    },
+    {
+      "id": 26,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 7",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap7",
+      "youtubeId": "cap7",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.513Z",
+      "completedAt": "2026-01-10T20:26:33.730Z"
+    },
+    {
+      "id": 27,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 8",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap8",
+      "youtubeId": "cap8",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.546Z",
+      "completedAt": "2026-01-10T20:27:16.981Z"
+    },
+    {
+      "id": 28,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 9",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap9",
+      "youtubeId": "cap9",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.579Z",
+      "completedAt": "2026-01-10T20:27:47.600Z"
+    },
+    {
+      "id": 29,
+      "guestId": "device_wfzeu11zm_1768076312014",
+      "guestName": "<script>alert('XSS')</script>",
+      "songTitle": "Sweet Caroline",
+      "youtubeUrl": "https://www.youtube.com/watch?v=1vhFnTjia_I",
+      "youtubeId": "1vhFnTjia_I",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.612Z",
+      "completedAt": "2026-01-10T20:26:32.106Z"
+    },
+    {
+      "id": 30,
+      "guestId": "test_cap",
+      "guestName": "CapTester",
+      "songTitle": "Cap Song 10",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cap10",
+      "youtubeId": "cap10",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:18.613Z",
+      "completedAt": "2026-01-10T20:27:47.605Z"
+    },
+    {
+      "id": 31,
+      "guestId": "device_g4vc8mczl_1768076270352",
+      "guestName": "PartyGuest1",
+      "songTitle": "Sweet Caroline",
+      "youtubeUrl": "https://www.youtube.com/watch?v=NsLyI1_R01M",
+      "youtubeId": "NsLyI1_R01M",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:26:19.976Z",
+      "completedAt": "2026-01-10T20:26:32.340Z"
+    },
+    {
+      "id": 32,
+      "guestId": "test_guest_a",
+      "guestName": "GuestA",
+      "songTitle": "Song A2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test_a2",
+      "youtubeId": "test_a2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:27:47.627Z",
+      "completedAt": "2026-01-10T20:27:47.639Z"
+    },
+    {
+      "id": 35,
+      "guestId": "test2_guest_e_1768076911108",
+      "guestName": "GuestE",
+      "songTitle": "Song E1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test2_e1",
+      "youtubeId": "test2_e1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:31.110Z",
+      "completedAt": "2026-01-10T20:28:31.128Z"
+    },
+    {
+      "id": 36,
+      "guestId": "test2_guest_e_1768076911108",
+      "guestName": "GuestE",
+      "songTitle": "Song E2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test2_e2",
+      "youtubeId": "test2_e2",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:31.135Z",
+      "completedAt": "2026-01-10T20:28:31.156Z"
+    },
+    {
+      "id": 39,
+      "guestId": "test3_g_1768076936485",
+      "guestName": "GuestG",
+      "songTitle": "Song G1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test3_g1",
+      "youtubeId": "test3_g1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:56.534Z",
+      "completedAt": "2026-01-10T20:29:13.160Z"
+    },
+    {
+      "id": 40,
+      "guestId": "test3_g_1768076936485",
+      "guestName": "GuestG",
+      "songTitle": "Song G2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test3_g2",
+      "youtubeId": "test3_g2",
+      "status": "skipped",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:56.582Z",
+      "completedAt": "2026-01-10T20:29:43.321Z"
+    },
+    {
+      "id": 41,
+      "guestId": "test3_h_1768076936485",
+      "guestName": "GuestH",
+      "songTitle": "Song H1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test3_h1",
+      "youtubeId": "test3_h1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:56.628Z",
+      "completedAt": "2026-01-10T20:29:13.175Z"
+    },
+    {
+      "id": 43,
+      "guestId": "test3_i_1768076936485",
+      "guestName": "GuestI",
+      "songTitle": "Song I1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test3_i1",
+      "youtubeId": "test3_i1",
+      "status": "completed",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:28:56.723Z",
+      "completedAt": "2026-01-10T20:29:13.187Z"
+    },
+    {
+      "id": 45,
+      "guestId": "test4_regular_1_1768076983325",
+      "guestName": "Regular1",
+      "songTitle": "Song Regular1",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_r1",
+      "youtubeId": "test4_r1",
+      "status": "current",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:29:43.375Z",
+      "completedAt": null
+    },
+    {
+      "id": 46,
+      "guestId": "test4_regular_2_1768076983325",
+      "guestName": "Regular2",
+      "songTitle": "Song Regular2",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_r2",
+      "youtubeId": "test4_r2",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:29:43.423Z",
+      "completedAt": null
+    },
+    {
+      "id": 47,
+      "guestId": "test4_regular_3_1768076983325",
+      "guestName": "Regular3",
+      "songTitle": "Song Regular3",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_r3",
+      "youtubeId": "test4_r3",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:29:43.470Z",
+      "completedAt": null
+    },
+    {
+      "id": 48,
+      "guestId": "test4_regular_4_1768076983325",
+      "guestName": "Regular4",
+      "songTitle": "Song Regular4",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_r4",
+      "youtubeId": "test4_r4",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:29:43.517Z",
+      "completedAt": null
+    },
+    {
+      "id": 49,
+      "guestId": "test4_regular_5_1768076983325",
+      "guestName": "Regular5",
+      "songTitle": "Song Regular5",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_r5",
+      "youtubeId": "test4_r5",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:29:43.565Z",
+      "completedAt": null
+    },
+    {
+      "id": 50,
+      "guestId": "test4_vip_kristin_1768076983325",
+      "guestName": "Kristin VIP",
+      "songTitle": "Song VIP Kristin",
+      "youtubeUrl": "https://www.youtube.com/watch?v=test4_vip",
+      "youtubeId": "test4_vip",
+      "status": "completed",
+      "positionOverride": -1,
+      "submittedAt": "2026-01-10T20:29:43.612Z",
+      "completedAt": "2026-01-10T20:30:17.082Z"
+    },
+    {
+      "id": 51,
+      "guestId": "device_6z4wpw0ff_1768077132317",
+      "guestName": "Kristin Birthday Girl",
+      "songTitle": "Happy Birthday (VIP Song)",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "status": "queued",
+      "positionOverride": -1,
+      "submittedAt": "2026-01-10T20:33:32.083Z",
+      "completedAt": null
+    },
+    {
+      "id": 52,
+      "guestId": "vip_test_1768076917751",
+      "guestName": "Kristin Party",
+      "songTitle": "Birthday Queen Song",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "status": "queued",
+      "positionOverride": null,
+      "submittedAt": "2026-01-10T20:33:51.559Z",
+      "completedAt": null
+    }
+  ],
+  "songIdCounter": 53,
+  "stats": {
+    "totalSongsPlayed": 34,
+    "partyStartedAt": "2026-01-10T19:28:58.579Z",
+    "isPaused": false,
+    "currentSongId": 45
+  }
+}
