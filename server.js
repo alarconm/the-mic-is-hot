@@ -514,6 +514,135 @@ app.post('/api/kj/start', (req, res) => {
   res.json({ success: true });
 });
 
+// Reset party (start fresh)
+app.post('/api/kj/reset', (req, res) => {
+  // Clear all songs
+  store.songs = [];
+  store.songIdCounter = 1;
+
+  // Reset all guests' song counts but keep them registered
+  for (const [deviceId, guest] of store.guests) {
+    guest.songsCompleted = 0;
+    guest.skipUsed = false;
+  }
+
+  // Reset stats
+  store.stats = {
+    totalSongsPlayed: 0,
+    partyStartedAt: new Date().toISOString(),
+    isPaused: false,
+    currentSongId: null
+  };
+
+  saveData();
+  broadcastQueueUpdate();
+  io.emit('party-reset', { message: 'Party has been reset!' });
+  res.json({ success: true, message: 'Party reset! Ready for a fresh start.' });
+});
+
+// Guest starts their own song (self-service flow)
+app.post('/api/song/start', (req, res) => {
+  const { deviceId, songId } = req.body;
+
+  if (!deviceId) {
+    return res.status(400).json({ error: 'Device ID required' });
+  }
+
+  const guest = store.guests.get(deviceId);
+  if (!guest) {
+    return res.status(400).json({ error: 'Guest not found' });
+  }
+
+  // Check if there's already a current song
+  const current = getCurrentSong();
+  if (current) {
+    return res.status(400).json({ error: 'Someone is already performing!' });
+  }
+
+  // Get the queue
+  const queue = getQueue();
+  if (queue.length === 0) {
+    return res.status(400).json({ error: 'Queue is empty' });
+  }
+
+  // Check if this guest's song is first in queue
+  const firstSong = queue[0];
+  if (firstSong.guestId !== deviceId) {
+    return res.status(403).json({ error: "It's not your turn yet!" });
+  }
+
+  // If songId provided, make sure it matches the first song
+  if (songId && firstSong.id !== songId) {
+    return res.status(400).json({ error: 'This is not your next song' });
+  }
+
+  // Start the song - mark it as current
+  const song = store.songs.find(s => s.id === firstSong.id);
+  if (song) {
+    song.status = 'current';
+  }
+  store.stats.currentSongId = firstSong.id;
+
+  // Generate roast intro
+  const roast = generateRoast(firstSong.guestName, firstSong.songTitle, guest.isVip, guest.songsCompleted);
+
+  io.emit('now-playing', {
+    song: firstSong,
+    roast,
+    isVip: guest.isVip || false
+  });
+
+  saveData();
+  broadcastQueueUpdate();
+  res.json({ success: true, message: "You're up! Get to the stage!" });
+});
+
+// Guest marks their song as done (self-service advance)
+app.post('/api/song/done', (req, res) => {
+  const { deviceId } = req.body;
+
+  if (!deviceId) {
+    return res.status(400).json({ error: 'Device ID required' });
+  }
+
+  const current = getCurrentSong();
+  if (!current) {
+    return res.status(400).json({ error: 'No song is currently playing' });
+  }
+
+  // Only the performer or KJ can mark as done
+  if (current.guestId !== deviceId) {
+    return res.status(403).json({ error: "This isn't your song!" });
+  }
+
+  // Mark current as completed
+  const song = store.songs.find(s => s.id === current.id);
+  if (song) {
+    song.status = 'completed';
+    song.completedAt = new Date().toISOString();
+  }
+
+  // Increment guest's songs_completed
+  const guest = store.guests.get(current.guestId);
+  if (guest) {
+    guest.songsCompleted++;
+  }
+
+  store.stats.totalSongsPlayed++;
+  store.stats.currentSongId = null;
+
+  saveData();
+  broadcastQueueUpdate();
+
+  // Notify the next person in queue
+  const queue = getQueue();
+  if (queue.length > 0) {
+    io.emit('your-turn-soon', { guestId: queue[0].guestId, songId: queue[0].id });
+  }
+
+  res.json({ success: true, message: 'Great job! 🎤' });
+});
+
 // VIP skip (Kristen can use this once)
 app.post('/api/vip/skip', (req, res) => {
   const { deviceId, songId } = req.body;

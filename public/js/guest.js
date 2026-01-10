@@ -7,6 +7,9 @@ let deviceId = localStorage.getItem('micIsHot_deviceId');
 let guest = null;
 let currentQueue = [];
 let mySongs = [];
+let currentlyPlaying = null;
+let isMyTurn = false;
+let amIPerforming = false;
 
 // Loading messages for fun
 const loadingMessages = [
@@ -210,28 +213,95 @@ function searchYouTube(query) {
   // Clear and rebuild with safe DOM methods
   youtubeResults.textContent = '';
 
-  const card = document.createElement('div');
-  card.className = 'card';
+  // Step 1 card
+  const step1 = document.createElement('div');
+  step1.className = 'card';
+  step1.style.marginBottom = '1rem';
+  step1.style.background = 'linear-gradient(135deg, rgba(255, 0, 0, 0.05), rgba(255, 0, 0, 0.1))';
+  step1.style.border = '2px solid rgba(255, 0, 0, 0.2)';
 
-  const tip = document.createElement('p');
-  tip.style.marginBottom = '1rem';
-  tip.innerHTML = '<strong>Quick tip:</strong> Open YouTube in another tab, find your karaoke video, then copy the URL and paste it back here!';
+  const step1Header = document.createElement('div');
+  step1Header.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;';
+  step1Header.innerHTML = '<span style="background: #FF0000; color: white; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: bold; font-size: 0.75rem;">STEP 1</span> <span style="font-weight: 600;">Open YouTube</span>';
 
   const link = document.createElement('a');
   link.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
   link.target = '_blank';
-  link.className = 'btn btn-hot btn-block';
-  link.textContent = `Search "${query}" on YouTube ↗`;
+  link.className = 'btn btn-block';
+  link.style.cssText = 'background: #FF0000; color: white; font-weight: 700;';
+  link.textContent = `🔍 Search "${query.substring(0, 20)}${query.length > 20 ? '...' : ''}" on YouTube`;
+  link.addEventListener('click', () => {
+    // After clicking, show step 2 more prominently
+    setTimeout(() => {
+      step2.style.animation = 'pulse 0.5s ease';
+    }, 500);
+  });
 
-  card.appendChild(tip);
-  card.appendChild(link);
+  step1.appendChild(step1Header);
+  step1.appendChild(link);
 
-  const subtext = document.createElement('p');
-  subtext.style.cssText = 'text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem;';
-  subtext.textContent = 'After you find your video, copy the URL and paste it in the form!';
+  // Step 2 card
+  const step2 = document.createElement('div');
+  step2.className = 'card';
+  step2.style.marginBottom = '1rem';
 
-  youtubeResults.appendChild(card);
-  youtubeResults.appendChild(subtext);
+  const step2Header = document.createElement('div');
+  step2Header.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;';
+  step2Header.innerHTML = '<span style="background: #06D6A0; color: white; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: bold; font-size: 0.75rem;">STEP 2</span> <span style="font-weight: 600;">Copy & Paste the URL</span>';
+
+  const instructions = document.createElement('p');
+  instructions.style.cssText = 'font-size: 0.85rem; color: #5C5F7B; margin-bottom: 1rem;';
+  instructions.textContent = 'Find your karaoke video, tap Share → Copy link, then paste below:';
+
+  const pasteInput = document.createElement('input');
+  pasteInput.type = 'text';
+  pasteInput.className = 'form-input';
+  pasteInput.placeholder = 'Paste YouTube URL here...';
+  pasteInput.style.marginBottom = '0.75rem';
+  pasteInput.addEventListener('input', (e) => {
+    const videoId = extractYouTubeId(e.target.value);
+    if (videoId) {
+      youtubeUrlInput.value = e.target.value;
+      previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      previewTitle.textContent = 'Video found! ✓';
+      videoPreview.classList.remove('hidden');
+      youtubeModal.classList.remove('active');
+      showToast('Video added! Now submit your song 🎤');
+    }
+  });
+
+  const pasteBtn = document.createElement('button');
+  pasteBtn.type = 'button';
+  pasteBtn.className = 'btn btn-hot btn-block';
+  pasteBtn.textContent = '📋 Paste from Clipboard';
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const videoId = extractYouTubeId(text);
+      if (videoId) {
+        youtubeUrlInput.value = text;
+        previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        previewTitle.textContent = 'Video found! ✓';
+        videoPreview.classList.remove('hidden');
+        youtubeModal.classList.remove('active');
+        showToast('Video added! Now submit your song 🎤');
+      } else {
+        showToast('No YouTube URL found in clipboard');
+      }
+    } catch (err) {
+      // Clipboard API not available, show manual input
+      pasteInput.focus();
+      showToast('Paste the URL in the text box above');
+    }
+  });
+
+  step2.appendChild(step2Header);
+  step2.appendChild(instructions);
+  step2.appendChild(pasteInput);
+  step2.appendChild(pasteBtn);
+
+  youtubeResults.appendChild(step1);
+  youtubeResults.appendChild(step2);
 }
 
 // Video preview when URL is pasted
@@ -447,7 +517,9 @@ vipSkipBtn.addEventListener('click', async () => {
 // Socket events
 socket.on('queue-updated', (data) => {
   currentQueue = data.queue;
+  currentlyPlaying = data.current;
   renderQueue(data.queue);
+  updatePerformerStatus();
 
   // Update my songs from queue
   if (guest) {
@@ -467,14 +539,169 @@ socket.on('queue-updated', (data) => {
 });
 
 socket.on('now-playing', (data) => {
+  currentlyPlaying = data.song;
   if (data.song.guestId === deviceId) {
+    amIPerforming = true;
     showToast("🎤 IT'S YOUR TURN! GET UP THERE!");
   }
+  updatePerformerStatus();
 });
 
 socket.on('vip-skip', (data) => {
   showToast(`👑 ${data.guestName} used VIP SKIP!`);
 });
+
+socket.on('your-turn-soon', (data) => {
+  if (data.guestId === deviceId) {
+    showToast("🎤 You're up next! Get ready!");
+    updatePerformerStatus();
+  }
+});
+
+socket.on('party-reset', () => {
+  currentlyPlaying = null;
+  isMyTurn = false;
+  amIPerforming = false;
+  updatePerformerStatus();
+  showToast("🎉 Party reset! Fresh start!");
+});
+
+// Update performer status and show/hide action buttons
+function updatePerformerStatus() {
+  // Check if I'm currently performing
+  amIPerforming = currentlyPlaying && currentlyPlaying.guestId === deviceId;
+
+  // Check if I'm next (first in queue and no one is performing)
+  isMyTurn = !currentlyPlaying && currentQueue.length > 0 && currentQueue[0].guestId === deviceId;
+
+  renderPerformerActions();
+}
+
+// Render performer action buttons
+function renderPerformerActions() {
+  // Get or create the performer actions container
+  let performerActions = document.getElementById('performer-actions');
+
+  if (!performerActions) {
+    // Create the container
+    performerActions = document.createElement('div');
+    performerActions.id = 'performer-actions';
+    performerActions.className = 'card';
+    performerActions.style.cssText = 'margin: 0.75rem; display: none;';
+
+    // Insert before the tab-bar so it's always visible
+    const mainView = document.getElementById('main-view');
+    const tabBar = mainView?.querySelector('.tab-bar');
+    if (mainView && tabBar) {
+      mainView.insertBefore(performerActions, tabBar);
+    }
+  }
+
+  // Clear and rebuild content
+  performerActions.textContent = '';
+
+  if (amIPerforming) {
+    // Show "I'm Done" button
+    performerActions.style.display = 'block';
+    performerActions.style.background = 'linear-gradient(135deg, rgba(6, 214, 160, 0.15), rgba(6, 214, 160, 0.25))';
+    performerActions.style.border = '2px solid #06D6A0';
+    performerActions.style.animation = 'pulse 2s infinite';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align: center; margin-bottom: 1rem;';
+    header.innerHTML = '<div style="font-size: 2rem;">🎤</div><div style="font-size: 1.25rem; font-weight: 700; color: #06D6A0;">YOU\'RE PERFORMING!</div>';
+
+    const currentSongInfo = document.createElement('div');
+    currentSongInfo.style.cssText = 'text-align: center; margin-bottom: 1rem; font-size: 1rem; color: #5C5F7B;';
+    currentSongInfo.textContent = currentlyPlaying ? currentlyPlaying.songTitle : '';
+
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'btn btn-block';
+    doneBtn.style.cssText = 'background: linear-gradient(135deg, #06D6A0, #059669); font-size: 1.25rem; padding: 1rem;';
+    doneBtn.textContent = '✅ I\'m Done! Next Singer!';
+    doneBtn.addEventListener('click', completeMySong);
+
+    performerActions.appendChild(header);
+    performerActions.appendChild(currentSongInfo);
+    performerActions.appendChild(doneBtn);
+
+  } else if (isMyTurn) {
+    // Show "Start My Song" button
+    performerActions.style.display = 'block';
+    performerActions.style.background = 'linear-gradient(135deg, rgba(247, 37, 133, 0.15), rgba(114, 9, 183, 0.15))';
+    performerActions.style.border = '2px solid #F72585';
+    performerActions.style.animation = 'pulse 2s infinite';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align: center; margin-bottom: 1rem;';
+    header.innerHTML = '<div style="font-size: 2rem;">🔥</div><div style="font-size: 1.5rem; font-weight: 700; color: #F72585;">YOU\'RE UP!</div>';
+
+    const mySong = currentQueue[0];
+    const songInfo = document.createElement('div');
+    songInfo.style.cssText = 'text-align: center; margin-bottom: 1rem; font-size: 1rem; color: #5C5F7B;';
+    songInfo.textContent = mySong ? mySong.songTitle : '';
+
+    const startBtn = document.createElement('button');
+    startBtn.className = 'btn btn-hot btn-block';
+    startBtn.style.cssText = 'font-size: 1.25rem; padding: 1rem; animation: pulse 1s infinite;';
+    startBtn.textContent = '🎤 START MY SONG!';
+    startBtn.addEventListener('click', startMySong);
+
+    performerActions.appendChild(header);
+    performerActions.appendChild(songInfo);
+    performerActions.appendChild(startBtn);
+
+  } else {
+    // Hide if not my turn
+    performerActions.style.display = 'none';
+  }
+}
+
+// Start my song
+async function startMySong() {
+  try {
+    const response = await fetch('/api/song/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast("🎤 LET'S GO! You're on!");
+    } else {
+      showToast(data.error || 'Could not start song');
+    }
+  } catch (error) {
+    console.error('Start song error:', error);
+    showToast('Something went wrong');
+  }
+}
+
+// Complete my song
+async function completeMySong() {
+  try {
+    const response = await fetch('/api/song/done', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      amIPerforming = false;
+      showToast("🎉 Great job! You rocked it!");
+      updatePerformerStatus();
+    } else {
+      showToast(data.error || 'Could not complete song');
+    }
+  } catch (error) {
+    console.error('Complete song error:', error);
+    showToast('Something went wrong');
+  }
+}
 
 // Toast notification
 function showToast(message) {

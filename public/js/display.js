@@ -168,7 +168,7 @@ function showNowPlaying(song, roast, isVip) {
   roastText.textContent = roast;
 
   // Load the video
-  loadVideo(song.youtube_id);
+  loadVideo(song.youtubeId);
 
   showScreen('playing');
 

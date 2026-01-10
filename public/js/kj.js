@@ -24,6 +24,8 @@ const btnAdvance = document.getElementById('btn-advance');
 const btnSkip = document.getElementById('btn-skip');
 const btnPause = document.getElementById('btn-pause');
 const btnEmergency = document.getElementById('btn-emergency');
+const btnNewParty = document.getElementById('btn-new-party');
+const npYoutubeLink = document.getElementById('np-youtube-link');
 
 // API calls
 async function apiCall(endpoint, method = 'POST') {
@@ -63,6 +65,17 @@ function updateNowPlaying() {
     nowPlayingCard.classList.toggle('vip', currentSong.is_vip);
     npName.textContent = currentSong.guestName + (currentSong.is_vip ? ' 👑' : '');
     npSong.textContent = currentSong.songTitle;
+
+    // Set YouTube link
+    if (currentSong.youtubeUrl) {
+      npYoutubeLink.href = currentSong.youtubeUrl;
+      npYoutubeLink.style.display = 'inline-flex';
+    } else if (currentSong.youtubeId) {
+      npYoutubeLink.href = `https://www.youtube.com/watch?v=${currentSong.youtubeId}`;
+      npYoutubeLink.style.display = 'inline-flex';
+    } else {
+      npYoutubeLink.style.display = 'none';
+    }
 
     btnAdvance.disabled = false;
     btnSkip.disabled = false;
@@ -133,6 +146,21 @@ function renderQueue() {
 
     const actions = document.createElement('div');
     actions.className = 'queue-actions';
+
+    // YouTube link button
+    if (song.youtubeUrl || song.youtubeId) {
+      const ytBtn = document.createElement('a');
+      ytBtn.className = 'queue-action-btn';
+      ytBtn.href = song.youtubeUrl || `https://www.youtube.com/watch?v=${song.youtubeId}`;
+      ytBtn.target = '_blank';
+      ytBtn.textContent = '▶';
+      ytBtn.title = 'Open YouTube video';
+      ytBtn.style.background = 'rgba(255, 0, 0, 0.1)';
+      ytBtn.style.color = '#DC2626';
+      ytBtn.style.textDecoration = 'none';
+      ytBtn.addEventListener('click', (e) => e.stopPropagation());
+      actions.appendChild(ytBtn);
+    }
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'queue-action-btn';
@@ -240,12 +268,22 @@ function emergencyStop() {
   }
 }
 
+async function newParty() {
+  if (confirm('🎉 START NEW PARTY?\n\nThis will:\n• Clear all songs from the queue\n• Reset stats and drunk-o-meter\n• Keep guests registered\n\nAre you sure?')) {
+    const result = await apiCall('/api/kj/reset');
+    if (result?.success) {
+      alert('🎉 Party reset! Ready for a fresh start!');
+    }
+  }
+}
+
 // Button event listeners
 btnStart.addEventListener('click', startParty);
 btnAdvance.addEventListener('click', advanceToNext);
 btnSkip.addEventListener('click', skipCurrent);
 btnPause.addEventListener('click', togglePause);
 btnEmergency.addEventListener('click', emergencyStop);
+btnNewParty.addEventListener('click', newParty);
 
 // Socket events
 socket.on('queue-updated', (data) => {
