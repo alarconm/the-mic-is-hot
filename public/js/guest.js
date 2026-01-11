@@ -139,12 +139,23 @@ registerForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Voice persona selection handlers
+document.querySelectorAll('.voice-persona-option').forEach(option => {
+  option.addEventListener('click', () => {
+    // Remove selected class from all options
+    document.querySelectorAll('.voice-persona-option').forEach(o => o.classList.remove('selected'));
+    // Add selected class to clicked option
+    option.classList.add('selected');
+  });
+});
+
 // Song submission form
 songForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const songTitle = songTitleInput.value.trim();
   const youtubeUrl = youtubeUrlInput.value.trim();
+  const voicePersona = document.querySelector('input[name="voicePersona"]:checked')?.value || 'strip-club-dj';
 
   if (!songTitle || !youtubeUrl) return;
 
@@ -159,7 +170,7 @@ songForm.addEventListener('submit', async (e) => {
     const response = await fetch('/api/songs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId, songTitle, youtubeUrl })
+      body: JSON.stringify({ deviceId, songTitle, youtubeUrl, voicePersona })
     });
 
     const data = await response.json();

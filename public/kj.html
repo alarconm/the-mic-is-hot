@@ -240,6 +240,30 @@
       to { opacity: 1; }
     }
 
+    /* Voice Persona Badge */
+    .voice-persona-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(196, 77, 136, 0.15));
+      border: 1px solid rgba(255, 107, 157, 0.3);
+      border-radius: 20px;
+      font-size: 0.875rem;
+      color: #FF6B9D;
+      margin-top: 0.5rem;
+      opacity: 0;
+      animation: fadeInRoast 0.5s ease 0.3s forwards;
+    }
+
+    .voice-persona-badge span:first-child {
+      font-size: 1.125rem;
+    }
+
+    .voice-persona-badge span:last-child {
+      font-weight: 600;
+    }
+
     /* Countdown Screen */
     .countdown-section {
       padding: 1.5rem;
@@ -755,6 +779,10 @@
           <div class="performer-label">🔥 NOW PERFORMING 🔥</div>
           <h1 id="current-name" class="performer-name">-</h1>
           <p id="current-song" class="performer-song">-</p>
+          <div id="voice-persona-badge" class="voice-persona-badge hidden">
+            <span id="voice-persona-emoji">🎤</span>
+            <span id="voice-persona-name">AI DJ</span>
+          </div>
           <p id="roast-text" class="roast-text"></p>
         </div>
       </div>
@@ -765,6 +793,10 @@
           <div class="performer-label">🎤 UP NEXT 🎤</div>
           <h1 id="countdown-name" class="performer-name">-</h1>
           <p id="countdown-song" class="performer-song">-</p>
+          <div id="countdown-voice-persona-badge" class="voice-persona-badge hidden">
+            <span id="countdown-voice-persona-emoji">🎤</span>
+            <span id="countdown-voice-persona-name">AI DJ</span>
+          </div>
           <p id="countdown-roast" class="roast-text"></p>
         </div>
 

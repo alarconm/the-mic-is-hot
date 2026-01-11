@@ -109,6 +109,58 @@
       color: #2D3047;
     }
 
+    /* Voice Persona Selector */
+    .voice-persona-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .voice-persona-option {
+      cursor: pointer;
+    }
+
+    .voice-persona-option input[type="radio"] {
+      display: none;
+    }
+
+    .persona-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem 0.5rem;
+      background: #F8F9FC;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .voice-persona-option.selected .persona-card,
+    .voice-persona-option input:checked + .persona-card {
+      background: linear-gradient(135deg, #FF6B9D15, #C44D8815);
+      border-color: #FF6B9D;
+      box-shadow: 0 4px 12px rgba(255, 107, 157, 0.2);
+    }
+
+    .persona-emoji {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .persona-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #2D3047;
+      text-align: center;
+    }
+
+    .persona-desc {
+      font-size: 0.625rem;
+      color: #5C5F7B;
+      text-align: center;
+    }
+
     /* Buttons - larger for mobile */
     .btn-lg {
       padding: 1rem 1.5rem;
@@ -608,6 +660,43 @@
               <div id="video-preview" class="hidden">
                 <img id="preview-thumb" class="youtube-thumb">
                 <p id="preview-title"></p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Choose Your Intro Style</label>
+              <div class="voice-persona-grid">
+                <label class="voice-persona-option selected">
+                  <input type="radio" name="voicePersona" value="strip-club-dj" checked>
+                  <div class="persona-card">
+                    <span class="persona-emoji">🎤</span>
+                    <span class="persona-name">Strip Club DJ</span>
+                    <span class="persona-desc">Hypeman energy</span>
+                  </div>
+                </label>
+                <label class="voice-persona-option">
+                  <input type="radio" name="voicePersona" value="snoop-dogg">
+                  <div class="persona-card">
+                    <span class="persona-emoji">🌿</span>
+                    <span class="persona-name">Snoop Dogg</span>
+                    <span class="persona-desc">Laid back vibes</span>
+                  </div>
+                </label>
+                <label class="voice-persona-option">
+                  <input type="radio" name="voicePersona" value="morgan-freeman">
+                  <div class="persona-card">
+                    <span class="persona-emoji">🎬</span>
+                    <span class="persona-name">Morgan Freeman</span>
+                    <span class="persona-desc">Dramatic narrator</span>
+                  </div>
+                </label>
+                <label class="voice-persona-option">
+                  <input type="radio" name="voicePersona" value="sports-announcer">
+                  <div class="persona-card">
+                    <span class="persona-emoji">🏈</span>
+                    <span class="persona-name">Sports Announcer</span>
+                    <span class="persona-desc">High energy</span>
+                  </div>
+                </label>
               </div>
             </div>
             <button type="submit" class="btn btn-hot btn-block btn-lg">

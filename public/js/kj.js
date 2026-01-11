@@ -48,6 +48,12 @@ const countdownRoast = document.getElementById('countdown-roast');
 const countdownTimer = document.getElementById('countdown-timer');
 const countdownMessage = document.getElementById('countdown-message');
 const youtubeLink = document.getElementById('youtube-link');
+const voicePersonaBadge = document.getElementById('voice-persona-badge');
+const voicePersonaEmoji = document.getElementById('voice-persona-emoji');
+const voicePersonaName = document.getElementById('voice-persona-name');
+const countdownVoicePersonaBadge = document.getElementById('countdown-voice-persona-badge');
+const countdownVoicePersonaEmoji = document.getElementById('countdown-voice-persona-emoji');
+const countdownVoicePersonaName = document.getElementById('countdown-voice-persona-name');
 const timerDisplay = document.getElementById('timer-display');
 const pausedOverlay = document.getElementById('paused-overlay');
 const reactionOverlay = document.getElementById('reaction-overlay');
@@ -115,9 +121,17 @@ function stopPerformanceTimer() {
   timerDisplay.textContent = '0:00';
 }
 
+// Voice persona display data
+const VOICE_PERSONA_INFO = {
+  'strip-club-dj': { emoji: '🎤', name: 'Hypeman DJ' },
+  'snoop-dogg': { emoji: '🌿', name: 'Snoop Style' },
+  'morgan-freeman': { emoji: '🎬', name: 'Epic Narrator' },
+  'sports-announcer': { emoji: '🏈', name: 'Sports Hype' }
+};
+
 // ============ COUNTDOWN ============
 
-function startCountdown(song, roast, isVip) {
+function startCountdown(song, roast, isVip, voicePersona) {
   clearInterval(countdownInterval);
   countdownSeconds = 90;
 
@@ -126,6 +140,16 @@ function startCountdown(song, roast, isVip) {
   countdownName.classList.toggle('vip', isVip);
   countdownSongEl.textContent = song.songTitle;
   countdownRoast.textContent = roast;
+
+  // Show voice persona badge
+  if (voicePersona && VOICE_PERSONA_INFO[voicePersona]) {
+    const persona = VOICE_PERSONA_INFO[voicePersona];
+    countdownVoicePersonaEmoji.textContent = persona.emoji;
+    countdownVoicePersonaName.textContent = persona.name;
+    countdownVoicePersonaBadge.classList.remove('hidden');
+  } else {
+    countdownVoicePersonaBadge.classList.add('hidden');
+  }
 
   showScreen('countdown');
 
@@ -146,7 +170,7 @@ function startCountdown(song, roast, isVip) {
     if (countdownSeconds <= 0) {
       clearInterval(countdownInterval);
       // Time's up - show now playing
-      showNowPlaying(song, roast, isVip, new Date().toISOString());
+      showNowPlaying(song, roast, isVip, new Date().toISOString(), voicePersona);
     }
   }, 1000);
 }
@@ -174,13 +198,23 @@ function updateCountdownDisplay() {
 
 // ============ NOW PLAYING ============
 
-function showNowPlaying(song, roast, isVip, startedAt) {
+function showNowPlaying(song, roast, isVip, startedAt, voicePersona) {
   currentSong = song;
 
   currentName.textContent = song.guestName;
   currentName.classList.toggle('vip', isVip);
   currentSongEl.textContent = song.songTitle;
   roastText.textContent = roast;
+
+  // Show voice persona badge
+  if (voicePersona && VOICE_PERSONA_INFO[voicePersona]) {
+    const persona = VOICE_PERSONA_INFO[voicePersona];
+    voicePersonaEmoji.textContent = persona.emoji;
+    voicePersonaName.textContent = persona.name;
+    voicePersonaBadge.classList.remove('hidden');
+  } else {
+    voicePersonaBadge.classList.add('hidden');
+  }
 
   // Set YouTube link
   setYouTubeLink(song);
@@ -529,8 +563,8 @@ socket.on('queue-updated', (data) => {
 });
 
 socket.on('now-playing', (data) => {
-  // Start countdown for next performer
-  startCountdown(data.song, data.roast, data.isVip);
+  // Start countdown for next performer with voice persona
+  startCountdown(data.song, data.roast, data.isVip, data.voicePersona || data.song?.voicePersona);
 
   // Auto-open YouTube video if autoPlay flag is set (performer clicked Start on their phone)
   if (data.autoPlay && data.song) {

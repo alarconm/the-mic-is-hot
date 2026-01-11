@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import * as commentaryGenerator from './server/ai/commentary-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -378,7 +379,7 @@ app.post('/api/guest/register', (req, res) => {
 
 // Submit a song
 app.post('/api/songs', (req, res) => {
-  const { deviceId, songTitle, youtubeUrl } = req.body;
+  const { deviceId, songTitle, youtubeUrl, voicePersona } = req.body;
 
   if (!deviceId || !songTitle || !youtubeUrl) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -410,6 +411,7 @@ app.post('/api/songs', (req, res) => {
     songTitle: cleanSongTitle,
     youtubeUrl,
     youtubeId,
+    voicePersona: commentaryGenerator.isValidPersona(voicePersona) ? voicePersona : commentaryGenerator.DEFAULT_VOICE,
     status: 'queued',
     positionOverride: null,
     submittedAt: new Date().toISOString(),
@@ -431,6 +433,9 @@ app.post('/api/reaction', (req, res) => {
     return res.status(400).json({ error: 'Emoji required' });
   }
 
+  // Track reaction for AI commentary
+  commentaryGenerator.trackReaction(emoji, guestName || 'Anonymous');
+
   io.emit('reaction', { emoji, guestName: guestName || 'Anonymous' });
   res.json({ success: true });
 });
@@ -438,7 +443,7 @@ app.post('/api/reaction', (req, res) => {
 // ============ KJ CONTROL ROUTES ============
 
 // Advance to next song (mark current as complete)
-app.post('/api/kj/advance', (req, res) => {
+app.post('/api/kj/advance', async (req, res) => {
   const current = getCurrentSong();
 
   if (current) {
@@ -455,6 +460,9 @@ app.post('/api/kj/advance', (req, res) => {
       guest.songsCompleted++;
     }
 
+    // Clear reactions for the completed song
+    commentaryGenerator.clearReactions();
+
     store.stats.totalSongsPlayed++;
   }
 
@@ -469,13 +477,16 @@ app.post('/api/kj/advance', (req, res) => {
     }
     store.stats.currentSongId = next.id;
 
-    // Generate roast intro
+    // Generate AI roast intro
     const guest = store.guests.get(next.guestId);
-    const roast = generateRoast(next.guestName, next.songTitle, guest?.isVip, guest?.songsCompleted || 0);
+    const stats = getStats();
+    const commentary = await commentaryGenerator.generateIntro(next, guest || { name: next.guestName }, stats);
 
     io.emit('now-playing', {
       song: { ...next, startedAt: song.startedAt },
-      roast,
+      roast: commentary.text,
+      voicePersona: commentary.voicePersona,
+      aiSource: commentary.source,
       isVip: guest?.isVip || false
     });
   } else {
@@ -488,7 +499,7 @@ app.post('/api/kj/advance', (req, res) => {
 });
 
 // Skip current performer
-app.post('/api/kj/skip', (req, res) => {
+app.post('/api/kj/skip', async (req, res) => {
   const current = getCurrentSong();
 
   if (current) {
@@ -497,6 +508,8 @@ app.post('/api/kj/skip', (req, res) => {
       song.status = 'skipped';
       song.completedAt = new Date().toISOString();
     }
+    // Clear reactions
+    commentaryGenerator.clearReactions();
   }
 
   // Get next
@@ -510,11 +523,14 @@ app.post('/api/kj/skip', (req, res) => {
     }
 
     const guest = store.guests.get(next.guestId);
-    const roast = generateRoast(next.guestName, next.songTitle, guest?.isVip, guest?.songsCompleted || 0);
+    const stats = getStats();
+    const commentary = await commentaryGenerator.generateIntro(next, guest || { name: next.guestName }, stats);
 
     io.emit('now-playing', {
       song: { ...next, startedAt: song.startedAt },
-      roast,
+      roast: commentary.text,
+      voicePersona: commentary.voicePersona,
+      aiSource: commentary.source,
       isVip: guest?.isVip || false
     });
   }
@@ -556,7 +572,7 @@ app.post('/api/kj/pause', (req, res) => {
 });
 
 // Start the party (set first song as current)
-app.post('/api/kj/start', (req, res) => {
+app.post('/api/kj/start', async (req, res) => {
   const current = getCurrentSong();
   if (current) {
     return res.json({ success: true, message: 'Party already started!' });
@@ -572,11 +588,14 @@ app.post('/api/kj/start', (req, res) => {
     }
 
     const guest = store.guests.get(first.guestId);
-    const roast = generateRoast(first.guestName, first.songTitle, guest?.isVip, guest?.songsCompleted || 0);
+    const stats = getStats();
+    const commentary = await commentaryGenerator.generateIntro(first, guest || { name: first.guestName }, stats);
 
     io.emit('now-playing', {
       song: { ...first, startedAt: song.startedAt },
-      roast,
+      roast: commentary.text,
+      voicePersona: commentary.voicePersona,
+      aiSource: commentary.source,
       isVip: guest?.isVip || false
     });
     saveData();
@@ -616,7 +635,7 @@ app.post('/api/kj/reset', (req, res) => {
 const SONG_TIMEOUT_MINUTES = 5;
 
 // Guest starts their own song (self-service flow)
-app.post('/api/song/start', (req, res) => {
+app.post('/api/song/start', async (req, res) => {
   const { deviceId, songId } = req.body;
 
   if (!deviceId) {
@@ -660,6 +679,8 @@ app.post('/api/song/start', (req, res) => {
           prevGuest.songsCompleted++;
         }
         store.stats.totalSongsPlayed++;
+        // Clear reactions
+        commentaryGenerator.clearReactions();
       } else {
         const remainingMinutes = Math.ceil(SONG_TIMEOUT_MINUTES - elapsedMinutes);
         return res.status(400).json({
@@ -685,12 +706,15 @@ app.post('/api/song/start', (req, res) => {
   }
   store.stats.currentSongId = firstSong.id;
 
-  // Generate roast intro
-  const roast = generateRoast(firstSong.guestName, firstSong.songTitle, guest.isVip, guest.songsCompleted);
+  // Generate AI roast intro
+  const stats = getStats();
+  const commentary = await commentaryGenerator.generateIntro(firstSong, guest, stats);
 
   io.emit('now-playing', {
     song: { ...firstSong, startedAt: song.startedAt },
-    roast,
+    roast: commentary.text,
+    voicePersona: commentary.voicePersona,
+    aiSource: commentary.source,
     isVip: guest.isVip || false,
     autoPlay: true  // Auto-open YouTube when performer starts their own song
   });
