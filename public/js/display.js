@@ -381,6 +381,12 @@ socket.on('queue-updated', (data) => {
 socket.on('now-playing', (data) => {
   // Start countdown for next performer
   startCountdown(data.song, data.roast, data.isVip);
+
+  // Auto-open YouTube video if autoPlay flag is set
+  if (data.autoPlay && data.song) {
+    const youtubeUrl = data.song.youtubeUrl || `https://www.youtube.com/watch?v=${data.song.youtubeId}`;
+    window.open(youtubeUrl, '_blank');
+  }
 });
 
 socket.on('reaction', (data) => {

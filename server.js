@@ -644,7 +644,8 @@ app.post('/api/song/start', (req, res) => {
   io.emit('now-playing', {
     song: { ...firstSong, startedAt: song.startedAt },
     roast,
-    isVip: guest.isVip || false
+    isVip: guest.isVip || false,
+    autoPlay: true  // Auto-open YouTube when performer starts their own song
   });
 
   saveData();
