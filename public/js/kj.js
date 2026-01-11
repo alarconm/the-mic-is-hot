@@ -11,6 +11,8 @@ let countdownInterval = null;
 let countdownSeconds = 90;
 let performanceTimerInterval = null;
 let performanceStartTime = null;
+let djMuted = false;
+let djVolume = 0.8;
 
 // Drunk-o-meter status messages
 const drunkStatuses = [
@@ -75,6 +77,16 @@ const btnPause = document.getElementById('btn-pause');
 const btnReset = document.getElementById('btn-reset');
 const btnFullscreen = document.getElementById('btn-fullscreen');
 
+// Audio elements
+const djAudio = document.getElementById('dj-audio');
+const btnMuteDj = document.getElementById('btn-mute-dj');
+const muteIcon = document.getElementById('mute-icon');
+const djVolumeSlider = document.getElementById('dj-volume');
+const volumeDisplay = document.getElementById('volume-display');
+const djStatus = document.getElementById('dj-status');
+const djStatusIcon = document.getElementById('dj-status-icon');
+const djStatusText = document.getElementById('dj-status-text');
+
 // ============ SCREEN MANAGEMENT ============
 
 function showScreen(screen) {
@@ -129,9 +141,107 @@ const VOICE_PERSONA_INFO = {
   'sports-announcer': { emoji: '🏈', name: 'Sports Hype' }
 };
 
+// ============ AI DJ AUDIO ============
+
+function setDjStatus(status, text) {
+  djStatus.classList.remove('speaking', 'loading', 'error');
+  if (status) {
+    djStatus.classList.add(status);
+  }
+
+  const icons = {
+    speaking: '🎙️',
+    loading: '⏳',
+    error: '⚠️',
+    ready: '🤖'
+  };
+
+  djStatusIcon.textContent = icons[status] || icons.ready;
+  djStatusText.textContent = text || 'Ready';
+}
+
+function playDjAudio(audioUrl) {
+  if (!audioUrl || djMuted) {
+    console.log('DJ audio skipped:', djMuted ? 'muted' : 'no audio URL');
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    setDjStatus('loading', 'Loading...');
+
+    djAudio.src = audioUrl;
+    djAudio.volume = djVolume;
+
+    const onEnded = () => {
+      setDjStatus(null, 'Ready');
+      cleanup();
+      resolve();
+    };
+
+    const onError = (err) => {
+      console.error('DJ audio error:', err);
+      setDjStatus('error', 'Audio failed');
+      cleanup();
+      reject(err);
+    };
+
+    const onPlay = () => {
+      setDjStatus('speaking', 'Speaking...');
+    };
+
+    const cleanup = () => {
+      djAudio.removeEventListener('ended', onEnded);
+      djAudio.removeEventListener('error', onError);
+      djAudio.removeEventListener('play', onPlay);
+    };
+
+    djAudio.addEventListener('ended', onEnded);
+    djAudio.addEventListener('error', onError);
+    djAudio.addEventListener('play', onPlay);
+
+    djAudio.play().catch(err => {
+      console.error('DJ audio play failed:', err);
+      setDjStatus('error', 'Playback blocked');
+      cleanup();
+      reject(err);
+    });
+  });
+}
+
+function stopDjAudio() {
+  djAudio.pause();
+  djAudio.currentTime = 0;
+  setDjStatus(null, 'Ready');
+}
+
+function toggleDjMute() {
+  djMuted = !djMuted;
+  muteIcon.textContent = djMuted ? '🔇' : '🔊';
+  btnMuteDj.classList.toggle('muted', djMuted);
+
+  if (djMuted) {
+    stopDjAudio();
+  }
+}
+
+function updateDjVolume(value) {
+  djVolume = value / 100;
+  djAudio.volume = djVolume;
+  volumeDisplay.textContent = `${value}%`;
+
+  // Update mute icon based on volume
+  if (value === 0) {
+    muteIcon.textContent = '🔇';
+  } else if (value < 50) {
+    muteIcon.textContent = '🔉';
+  } else {
+    muteIcon.textContent = '🔊';
+  }
+}
+
 // ============ COUNTDOWN ============
 
-function startCountdown(song, roast, isVip, voicePersona) {
+function startCountdown(song, roast, isVip, voicePersona, audioUrl) {
   clearInterval(countdownInterval);
   countdownSeconds = 90;
 
@@ -156,6 +266,13 @@ function startCountdown(song, roast, isVip, voicePersona) {
   // If VIP, trigger confetti
   if (isVip) {
     triggerConfetti();
+  }
+
+  // Play AI DJ audio intro if available
+  if (audioUrl) {
+    playDjAudio(audioUrl).catch(err => {
+      console.log('DJ audio playback issue:', err.message);
+    });
   }
 
   // Update countdown
@@ -563,8 +680,8 @@ socket.on('queue-updated', (data) => {
 });
 
 socket.on('now-playing', (data) => {
-  // Start countdown for next performer with voice persona
-  startCountdown(data.song, data.roast, data.isVip, data.voicePersona || data.song?.voicePersona);
+  // Start countdown for next performer with voice persona and audio
+  startCountdown(data.song, data.roast, data.isVip, data.voicePersona || data.song?.voicePersona, data.audioUrl);
 
   // Auto-open YouTube video if autoPlay flag is set (performer clicked Start on their phone)
   if (data.autoPlay && data.song) {
@@ -676,6 +793,14 @@ socket.on('party-reset', () => {
   clearInterval(countdownInterval);
   showScreen('waiting');
 });
+
+// ============ AUDIO CONTROL EVENT LISTENERS ============
+
+btnMuteDj.addEventListener('click', toggleDjMute);
+djVolumeSlider.addEventListener('input', (e) => updateDjVolume(parseInt(e.target.value)));
+
+// Initialize DJ audio volume
+djAudio.volume = djVolume;
 
 // ============ INITIALIZE ============
 

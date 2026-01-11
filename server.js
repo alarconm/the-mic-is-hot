@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import * as commentaryGenerator from './server/ai/commentary-generator.js';
+import * as elevenLabsService from './server/ai/elevenlabs-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -482,11 +483,23 @@ app.post('/api/kj/advance', async (req, res) => {
     const stats = getStats();
     const commentary = await commentaryGenerator.generateIntro(next, guest || { name: next.guestName }, stats);
 
+    // Generate voice audio if ElevenLabs is configured
+    let audioUrl = null;
+    if (elevenLabsService.isConfigured()) {
+      try {
+        audioUrl = await elevenLabsService.synthesizeToDataUrl(commentary.text, commentary.voicePersona);
+        console.log('Generated voice audio for:', next.guestName);
+      } catch (err) {
+        console.error('Voice synthesis failed, continuing without audio:', err.message);
+      }
+    }
+
     io.emit('now-playing', {
       song: { ...next, startedAt: song.startedAt },
       roast: commentary.text,
       voicePersona: commentary.voicePersona,
       aiSource: commentary.source,
+      audioUrl,
       isVip: guest?.isVip || false
     });
   } else {
@@ -526,11 +539,23 @@ app.post('/api/kj/skip', async (req, res) => {
     const stats = getStats();
     const commentary = await commentaryGenerator.generateIntro(next, guest || { name: next.guestName }, stats);
 
+    // Generate voice audio if ElevenLabs is configured
+    let audioUrl = null;
+    if (elevenLabsService.isConfigured()) {
+      try {
+        audioUrl = await elevenLabsService.synthesizeToDataUrl(commentary.text, commentary.voicePersona);
+        console.log('Generated voice audio for:', next.guestName);
+      } catch (err) {
+        console.error('Voice synthesis failed, continuing without audio:', err.message);
+      }
+    }
+
     io.emit('now-playing', {
       song: { ...next, startedAt: song.startedAt },
       roast: commentary.text,
       voicePersona: commentary.voicePersona,
       aiSource: commentary.source,
+      audioUrl,
       isVip: guest?.isVip || false
     });
   }
@@ -591,11 +616,23 @@ app.post('/api/kj/start', async (req, res) => {
     const stats = getStats();
     const commentary = await commentaryGenerator.generateIntro(first, guest || { name: first.guestName }, stats);
 
+    // Generate voice audio if ElevenLabs is configured
+    let audioUrl = null;
+    if (elevenLabsService.isConfigured()) {
+      try {
+        audioUrl = await elevenLabsService.synthesizeToDataUrl(commentary.text, commentary.voicePersona);
+        console.log('Generated voice audio for:', first.guestName);
+      } catch (err) {
+        console.error('Voice synthesis failed, continuing without audio:', err.message);
+      }
+    }
+
     io.emit('now-playing', {
       song: { ...first, startedAt: song.startedAt },
       roast: commentary.text,
       voicePersona: commentary.voicePersona,
       aiSource: commentary.source,
+      audioUrl,
       isVip: guest?.isVip || false
     });
     saveData();
@@ -710,11 +747,23 @@ app.post('/api/song/start', async (req, res) => {
   const stats = getStats();
   const commentary = await commentaryGenerator.generateIntro(firstSong, guest, stats);
 
+  // Generate voice audio if ElevenLabs is configured
+  let audioUrl = null;
+  if (elevenLabsService.isConfigured()) {
+    try {
+      audioUrl = await elevenLabsService.synthesizeToDataUrl(commentary.text, commentary.voicePersona);
+      console.log('Generated voice audio for:', firstSong.guestName);
+    } catch (err) {
+      console.error('Voice synthesis failed, continuing without audio:', err.message);
+    }
+  }
+
   io.emit('now-playing', {
     song: { ...firstSong, startedAt: song.startedAt },
     roast: commentary.text,
     voicePersona: commentary.voicePersona,
     aiSource: commentary.source,
+    audioUrl,
     isVip: guest.isVip || false,
     autoPlay: true  // Auto-open YouTube when performer starts their own song
   });
