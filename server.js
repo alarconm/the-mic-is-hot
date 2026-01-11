@@ -157,7 +157,7 @@ function extractYouTubeId(url) {
   return null;
 }
 
-// Get queue sorted by: songs_completed ASC, then submitted_at ASC
+// Get queue sorted by: VIP skip > songs_completed ASC > submitted_at ASC
 function getQueue() {
   return store.songs
     .filter(s => s.status === 'queued')
@@ -171,13 +171,15 @@ function getQueue() {
       };
     })
     .sort((a, b) => {
-      // First: position override (VIP skip)
-      if (a.positionOverride !== null && b.positionOverride === null) return -1;
-      if (a.positionOverride === null && b.positionOverride !== null) return 1;
-      if (a.positionOverride !== null && b.positionOverride !== null) {
+      // First: position override (VIP skip) - handle null/undefined
+      const aHasOverride = a.positionOverride != null;
+      const bHasOverride = b.positionOverride != null;
+      if (aHasOverride && !bHasOverride) return -1;
+      if (!aHasOverride && bHasOverride) return 1;
+      if (aHasOverride && bHasOverride) {
         return a.positionOverride - b.positionOverride;
       }
-      // Second: fewer songs completed = higher priority
+      // Second: fewer songs completed = higher priority (fairness algorithm)
       if (a.songs_completed !== b.songs_completed) {
         return a.songs_completed - b.songs_completed;
       }
@@ -294,12 +296,21 @@ app.post('/api/guest/register', (req, res) => {
     return res.status(400).json({ error: 'Device ID and name required' });
   }
 
+  // Sanitize and validate name
+  let cleanName = name.trim()
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .substring(0, 30); // Limit to 30 characters
+
+  if (cleanName.length < 2) {
+    return res.status(400).json({ error: 'Name must be at least 2 characters' });
+  }
+
   // Check if this is Kristin (VIP - the birthday girl!)
-  const isVip = name.toLowerCase().includes('kristin');
+  const isVip = cleanName.toLowerCase().includes('kristin');
 
   const guest = {
     id: deviceId,
-    name: name.trim(),
+    name: cleanName,
     songsCompleted: 0,
     isVip,
     skipUsed: false,
@@ -336,11 +347,20 @@ app.post('/api/songs', (req, res) => {
     return res.status(400).json({ error: 'Invalid YouTube URL' });
   }
 
+  // Sanitize song title
+  const cleanSongTitle = songTitle.trim()
+    .replace(/[<>]/g, '')
+    .substring(0, 100);
+
+  if (cleanSongTitle.length < 1) {
+    return res.status(400).json({ error: 'Song title required' });
+  }
+
   const song = {
     id: store.songIdCounter++,
     guestId: deviceId,
     guestName: guest.name,
-    songTitle: songTitle.trim(),
+    songTitle: cleanSongTitle,
     youtubeUrl,
     youtubeId,
     status: 'queued',

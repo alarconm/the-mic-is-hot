@@ -536,15 +536,19 @@
       <div class="card">
         <form id="register-form">
           <div class="form-group">
-            <label class="form-label">What's your name?</label>
+            <label class="form-label">First Name + Last Initial</label>
             <input
               type="text"
               id="guest-name"
               class="form-input"
-              placeholder="Enter your name..."
+              placeholder="e.g. Mike A, Sarah B, Kristin M..."
               autocomplete="off"
+              maxlength="30"
               required
             >
+            <p style="font-size: 0.75rem; color: #9094B2; margin-top: 0.5rem;">
+              This helps us know who's who when calling you up to sing!
+            </p>
           </div>
           <button type="submit" class="btn btn-hot btn-block btn-lg">
             Let's Party! 🔥
