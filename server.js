@@ -159,6 +159,7 @@ function extractYouTubeId(url) {
 
 // Get queue sorted by: VIP skip > round-robin (song number) > submitted_at ASC
 // Round-robin ensures everyone's 1st song plays before anyone's 2nd song, etc.
+// VIP (Kristin) gets 2 songs per round while everyone else gets 1
 function getQueue() {
   const queuedSongs = store.songs.filter(s => s.status === 'queued');
 
@@ -177,16 +178,24 @@ function getQueue() {
     guestSongCounts[song.guestId]++;
 
     const guest = store.guests.get(song.guestId);
+    const isVip = guest?.isVip || false;
+    const rawSongNumber = guestSongCounts[song.guestId];
+
+    // VIP gets 2 songs per round: songs 1,2 = round 1, songs 3,4 = round 2, etc.
+    // Non-VIP: song 1 = round 1, song 2 = round 2, etc.
+    const effectiveRound = isVip ? Math.ceil(rawSongNumber / 2) : rawSongNumber;
+
     return {
       ...song,
-      songNumber: guestSongCounts[song.guestId], // 1st, 2nd, 3rd song for this guest
+      songNumber: effectiveRound, // The "round" this song belongs to
+      rawSongNumber, // Actual song number for this guest (for ordering within round)
       songs_completed: guest?.songsCompleted || 0,
-      is_vip: guest?.isVip || false,
+      is_vip: isVip,
       skip_used: guest?.skipUsed || false
     };
   });
 
-  // Now sort by: positionOverride > songNumber (round-robin) > submittedAt
+  // Now sort by: positionOverride > songNumber (round-robin) > VIP first within round > submittedAt
   return songsWithNumbers.sort((a, b) => {
     // First: position override (VIP skip) - handle null/undefined
     const aHasOverride = a.positionOverride != null;
@@ -197,12 +206,17 @@ function getQueue() {
       return a.positionOverride - b.positionOverride;
     }
 
-    // Second: round-robin by song number (everyone's 1st song, then 2nd, etc.)
+    // Second: round-robin by effective round number
     if (a.songNumber !== b.songNumber) {
       return a.songNumber - b.songNumber;
     }
 
-    // Third: first come first serve within the same round
+    // Third: within same round, VIP songs go first (so Kristin's 2 songs play together)
+    if (a.is_vip !== b.is_vip) {
+      return a.is_vip ? -1 : 1;
+    }
+
+    // Fourth: first come first serve within the same round
     return new Date(a.submittedAt) - new Date(b.submittedAt);
   });
 }

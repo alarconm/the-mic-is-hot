@@ -532,16 +532,88 @@ socket.on('now-playing', (data) => {
   // Start countdown for next performer
   startCountdown(data.song, data.roast, data.isVip);
 
-  // Auto-open YouTube video if autoPlay flag is set
+  // Auto-open YouTube video if autoPlay flag is set (performer clicked Start on their phone)
   if (data.autoPlay && data.song) {
     const youtubeUrl = data.song.youtubeUrl || `https://www.youtube.com/watch?v=${data.song.youtubeId}`;
-    window.open(youtubeUrl, '_blank');
+    if (youtubeUrl) {
+      console.log('Performer started - auto-opening YouTube:', youtubeUrl);
+
+      // Try to open YouTube automatically
+      const newWindow = window.open(youtubeUrl, '_blank');
+
+      // If popup was blocked, show a notification
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        console.log('Popup blocked - showing manual prompt');
+        showAutoPlayNotification(youtubeUrl);
+      }
+    }
   }
 
   currentSong = data.song;
   updateButtonStates();
   updateStatus();
 });
+
+// Show notification when auto-play is blocked (using safe DOM methods)
+function showAutoPlayNotification(url) {
+  // Remove existing notification if any
+  const existing = document.getElementById('autoplay-notification');
+  if (existing) existing.remove();
+
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'autoplay-notification';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #FF6B6B, #F72585);
+    padding: 2rem 3rem;
+    border-radius: 24px;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 16px 48px rgba(247, 37, 133, 0.5);
+    animation: pulse 1s infinite;
+  `;
+
+  const icon = document.createElement('div');
+  icon.style.cssText = 'font-size: 3rem; margin-bottom: 1rem;';
+  icon.textContent = '🎤';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 1rem;';
+  title.textContent = 'PERFORMER IS READY!';
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.style.cssText = `
+    display: inline-block;
+    background: white;
+    color: #F72585;
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  `;
+  link.textContent = '▶ CLICK TO PLAY VIDEO';
+  link.addEventListener('click', () => overlay.remove());
+
+  overlay.appendChild(icon);
+  overlay.appendChild(title);
+  overlay.appendChild(link);
+  document.body.appendChild(overlay);
+
+  // Auto-remove after 10 seconds
+  setTimeout(() => {
+    if (document.getElementById('autoplay-notification')) {
+      document.getElementById('autoplay-notification').remove();
+    }
+  }, 10000);
+}
 
 socket.on('reaction', (data) => {
   showReaction(data.emoji);
