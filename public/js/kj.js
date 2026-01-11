@@ -1,45 +1,211 @@
-// THE MIC IS HOT - KJ Control Panel
+// THE MIC IS HOT - Combined KJ Control + Display
+// This is the main view for projectors with KJ controls in sidebar
 
 const socket = io();
 
-// State
+// ============ STATE ============
 let currentSong = null;
 let queue = [];
 let isPaused = false;
-let partyStarted = false;
+let countdownInterval = null;
+let countdownSeconds = 90;
+let performanceTimerInterval = null;
+let performanceStartTime = null;
 
-// DOM Elements
+// Drunk-o-meter status messages
+const drunkStatuses = [
+  { max: 20, text: "Sober Karaoke", color: "#00FF88" },
+  { max: 40, text: "Liquid Courage", color: "#88FF00" },
+  { max: 60, text: "Peak Performance", color: "#FFD700" },
+  { max: 80, text: "No F*cks Given", color: "#FF8800" },
+  { max: 100, text: "LEGENDARY", color: "#FF1493" },
+];
+
+// Countdown messages
+const countdownMessages = {
+  90: "Your moment approaches...",
+  60: "Get ready, superstar!",
+  30: "WHERE ARE YOU?!",
+  10: "LAST CALL! Move it!",
+  5: "5... 4... 3... 2... 1...",
+};
+
+// ============ DOM ELEMENTS ============
+
+// Screens
+const waitingScreen = document.getElementById('waiting-screen');
+const nowPlayingScreen = document.getElementById('now-playing-screen');
+const countdownScreen = document.getElementById('countdown-screen');
+
+// Display elements
 const statusBadge = document.getElementById('status-badge');
-const nowPlayingCard = document.getElementById('now-playing-card');
-const npName = document.getElementById('np-name');
-const npSong = document.getElementById('np-song');
+const currentName = document.getElementById('current-name');
+const currentSongEl = document.getElementById('current-song');
+const roastText = document.getElementById('roast-text');
+const countdownName = document.getElementById('countdown-name');
+const countdownSongEl = document.getElementById('countdown-song');
+const countdownRoast = document.getElementById('countdown-roast');
+const countdownTimer = document.getElementById('countdown-timer');
+const countdownMessage = document.getElementById('countdown-message');
+const youtubeLink = document.getElementById('youtube-link');
+const timerDisplay = document.getElementById('timer-display');
+const pausedOverlay = document.getElementById('paused-overlay');
+const reactionOverlay = document.getElementById('reaction-overlay');
+const confettiContainer = document.getElementById('confetti-container');
+
+// Sidebar elements
 const queueList = document.getElementById('queue-list');
 const queueCount = document.getElementById('queue-count');
 const statQueued = document.getElementById('stat-queued');
 const statCompleted = document.getElementById('stat-completed');
-const statDrunk = document.getElementById('stat-drunk');
+const drunkMeterFill = document.getElementById('drunk-meter-fill');
+const drunkMeterStatus = document.getElementById('drunk-meter-status');
 
+// Buttons
 const btnStart = document.getElementById('btn-start');
 const btnAdvance = document.getElementById('btn-advance');
 const btnSkip = document.getElementById('btn-skip');
 const btnPause = document.getElementById('btn-pause');
-const btnEmergency = document.getElementById('btn-emergency');
-const btnNewParty = document.getElementById('btn-new-party');
-const npYoutubeLink = document.getElementById('np-youtube-link');
+const btnReset = document.getElementById('btn-reset');
+const btnFullscreen = document.getElementById('btn-fullscreen');
 
-// API calls
-async function apiCall(endpoint, method = 'POST') {
-  try {
-    const response = await fetch(endpoint, { method });
-    return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    alert('Something went wrong. Check the console.');
-    return null;
+// ============ SCREEN MANAGEMENT ============
+
+function showScreen(screen) {
+  waitingScreen.classList.add('hidden');
+  nowPlayingScreen.classList.add('hidden');
+  countdownScreen.classList.add('hidden');
+
+  if (screen === 'waiting') {
+    waitingScreen.classList.remove('hidden');
+  } else if (screen === 'playing') {
+    nowPlayingScreen.classList.remove('hidden');
+  } else if (screen === 'countdown') {
+    countdownScreen.classList.remove('hidden');
   }
 }
 
-// Update status badge
+// ============ TIMER FUNCTIONS ============
+
+function startPerformanceTimer(startedAt) {
+  clearInterval(performanceTimerInterval);
+
+  if (startedAt) {
+    performanceStartTime = new Date(startedAt);
+  } else {
+    performanceStartTime = new Date();
+  }
+
+  updateTimerDisplay();
+  performanceTimerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function updateTimerDisplay() {
+  if (!performanceStartTime) return;
+
+  const elapsed = Math.floor((Date.now() - performanceStartTime.getTime()) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function stopPerformanceTimer() {
+  clearInterval(performanceTimerInterval);
+  performanceStartTime = null;
+  timerDisplay.textContent = '0:00';
+}
+
+// ============ COUNTDOWN ============
+
+function startCountdown(song, roast, isVip) {
+  clearInterval(countdownInterval);
+  countdownSeconds = 90;
+
+  // Update display
+  countdownName.textContent = song.guestName;
+  countdownName.classList.toggle('vip', isVip);
+  countdownSongEl.textContent = song.songTitle;
+  countdownRoast.textContent = roast;
+
+  showScreen('countdown');
+
+  // If VIP, trigger confetti
+  if (isVip) {
+    triggerConfetti();
+  }
+
+  // Update countdown
+  updateCountdownDisplay();
+
+  countdownInterval = setInterval(() => {
+    if (isPaused) return;
+
+    countdownSeconds--;
+    updateCountdownDisplay();
+
+    if (countdownSeconds <= 0) {
+      clearInterval(countdownInterval);
+      // Time's up - show now playing
+      showNowPlaying(song, roast, isVip, new Date().toISOString());
+    }
+  }, 1000);
+}
+
+function updateCountdownDisplay() {
+  countdownTimer.textContent = countdownSeconds;
+
+  // Update styling based on urgency
+  countdownTimer.classList.remove('warning', 'urgent', 'critical');
+  if (countdownSeconds <= 10) {
+    countdownTimer.classList.add('critical');
+  } else if (countdownSeconds <= 30) {
+    countdownTimer.classList.add('urgent');
+  } else if (countdownSeconds <= 60) {
+    countdownTimer.classList.add('warning');
+  }
+
+  // Update message
+  for (const [threshold, message] of Object.entries(countdownMessages).sort((a, b) => b[0] - a[0])) {
+    if (countdownSeconds <= parseInt(threshold)) {
+      countdownMessage.textContent = message;
+    }
+  }
+}
+
+// ============ NOW PLAYING ============
+
+function showNowPlaying(song, roast, isVip, startedAt) {
+  currentSong = song;
+
+  currentName.textContent = song.guestName;
+  currentName.classList.toggle('vip', isVip);
+  currentSongEl.textContent = song.songTitle;
+  roastText.textContent = roast;
+
+  // Set YouTube link
+  setYouTubeLink(song);
+
+  // Start the performance timer
+  startPerformanceTimer(startedAt);
+
+  showScreen('playing');
+
+  // If VIP, extra celebration
+  if (isVip) {
+    triggerConfetti();
+  }
+}
+
+function setYouTubeLink(song) {
+  if (song.youtubeUrl) {
+    youtubeLink.href = song.youtubeUrl;
+  } else if (song.youtubeId) {
+    youtubeLink.href = `https://www.youtube.com/watch?v=${song.youtubeId}`;
+  }
+}
+
+// ============ STATUS & UI UPDATES ============
+
 function updateStatus() {
   statusBadge.classList.remove('status-live', 'status-paused', 'status-waiting');
 
@@ -58,31 +224,13 @@ function updateStatus() {
   }
 }
 
-// Update now playing card
-function updateNowPlaying() {
+function updateButtonStates() {
   if (currentSong) {
-    nowPlayingCard.classList.remove('hidden');
-    nowPlayingCard.classList.toggle('vip', currentSong.is_vip);
-    npName.textContent = currentSong.guestName + (currentSong.is_vip ? ' 👑' : '');
-    npSong.textContent = currentSong.songTitle;
-
-    // Set YouTube link
-    if (currentSong.youtubeUrl) {
-      npYoutubeLink.href = currentSong.youtubeUrl;
-      npYoutubeLink.style.display = 'inline-flex';
-    } else if (currentSong.youtubeId) {
-      npYoutubeLink.href = `https://www.youtube.com/watch?v=${currentSong.youtubeId}`;
-      npYoutubeLink.style.display = 'inline-flex';
-    } else {
-      npYoutubeLink.style.display = 'none';
-    }
-
     btnAdvance.disabled = false;
     btnSkip.disabled = false;
     btnPause.disabled = false;
     btnStart.disabled = true;
   } else {
-    nowPlayingCard.classList.add('hidden');
     btnAdvance.disabled = true;
     btnSkip.disabled = true;
     btnPause.disabled = queue.length === 0;
@@ -90,24 +238,24 @@ function updateNowPlaying() {
   }
 }
 
-// Render queue using safe DOM methods
+function updateDrunkOMeter(level) {
+  drunkMeterFill.style.width = `${level}%`;
+
+  const status = drunkStatuses.find(s => level <= s.max) || drunkStatuses[drunkStatuses.length - 1];
+  drunkMeterStatus.textContent = status.text;
+  drunkMeterStatus.style.color = status.color;
+}
+
+// ============ QUEUE RENDERING ============
+
 function renderQueue() {
   queueList.textContent = '';
-  queueCount.textContent = `${queue.length} songs`;
+  queueCount.textContent = queue.length;
 
   if (queue.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-queue';
-
-    const p1 = document.createElement('p');
-    p1.textContent = 'No songs in queue';
-
-    const p2 = document.createElement('p');
-    p2.style.fontSize = '0.875rem';
-    p2.textContent = 'Waiting for guests to sign up...';
-
-    empty.appendChild(p1);
-    empty.appendChild(p2);
+    empty.textContent = 'No songs in queue';
     queueList.appendChild(empty);
     return;
   }
@@ -115,6 +263,7 @@ function renderQueue() {
   queue.forEach((song, index) => {
     const item = document.createElement('div');
     item.className = 'kj-queue-item';
+    if (index === 0) item.classList.add('next');
     if (song.is_vip) item.classList.add('vip');
     item.draggable = true;
     item.dataset.songId = song.id;
@@ -129,11 +278,9 @@ function renderQueue() {
     const name = document.createElement('div');
     name.className = 'queue-name';
     name.textContent = song.guestName;
-
     if (song.is_vip) {
       const badge = document.createElement('span');
-      badge.className = 'vip-badge';
-      badge.textContent = '👑 VIP';
+      badge.textContent = ' 👑';
       name.appendChild(badge);
     }
 
@@ -154,7 +301,7 @@ function renderQueue() {
       ytBtn.href = song.youtubeUrl || `https://www.youtube.com/watch?v=${song.youtubeId}`;
       ytBtn.target = '_blank';
       ytBtn.textContent = '▶';
-      ytBtn.title = 'Open YouTube video';
+      ytBtn.title = 'Open YouTube';
       ytBtn.style.background = 'rgba(255, 0, 0, 0.1)';
       ytBtn.style.color = '#DC2626';
       ytBtn.style.textDecoration = 'none';
@@ -165,7 +312,7 @@ function renderQueue() {
     const removeBtn = document.createElement('button');
     removeBtn.className = 'queue-action-btn';
     removeBtn.textContent = '✕';
-    removeBtn.title = 'Remove from queue';
+    removeBtn.title = 'Remove';
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm(`Remove "${song.songTitle}" by ${song.guestName}?`)) {
@@ -179,7 +326,7 @@ function renderQueue() {
     item.appendChild(info);
     item.appendChild(actions);
 
-    // Drag events for reordering
+    // Drag events
     item.addEventListener('dragstart', handleDragStart);
     item.addEventListener('dragover', handleDragOver);
     item.addEventListener('drop', handleDrop);
@@ -189,12 +336,12 @@ function renderQueue() {
   });
 }
 
-// Drag and drop handling
+// Drag and drop
 let draggedItem = null;
 
 function handleDragStart(e) {
   draggedItem = this;
-  this.classList.add('dragging');
+  this.style.opacity = '0.5';
   e.dataTransfer.effectAllowed = 'move';
 }
 
@@ -213,16 +360,56 @@ function handleDrop(e) {
 }
 
 function handleDragEnd() {
-  this.classList.remove('dragging');
+  this.style.opacity = '1';
   draggedItem = null;
 }
 
-// API Actions
-async function startParty() {
-  const result = await apiCall('/api/kj/start');
-  if (result?.success) {
-    partyStarted = true;
+// ============ REACTIONS & CONFETTI ============
+
+function showReaction(emoji) {
+  const reaction = document.createElement('div');
+  reaction.className = 'floating-reaction';
+  reaction.textContent = emoji;
+
+  const x = Math.random() * (window.innerWidth - 400);
+  reaction.style.left = `${x}px`;
+  reaction.style.bottom = '0';
+
+  reactionOverlay.appendChild(reaction);
+  setTimeout(() => reaction.remove(), 3000);
+}
+
+function triggerConfetti() {
+  const colors = ['#FF4500', '#FF1493', '#FFD700', '#00FF88', '#8B5CF6'];
+
+  for (let i = 0; i < 100; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = `${Math.random() * 100}%`;
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+      confettiContainer.appendChild(confetti);
+
+      setTimeout(() => confetti.remove(), 4000);
+    }, i * 30);
   }
+}
+
+// ============ API CALLS ============
+
+async function apiCall(endpoint, method = 'POST') {
+  try {
+    const response = await fetch(endpoint, { method });
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    return null;
+  }
+}
+
+async function startParty() {
+  await apiCall('/api/kj/start');
 }
 
 async function advanceToNext() {
@@ -239,11 +426,10 @@ async function togglePause() {
   const result = await apiCall('/api/kj/pause');
   if (result) {
     isPaused = result.isPaused;
-    btnPause.querySelector('.control-icon').textContent = isPaused ? '▶️' : '⏸️';
-    btnPause.querySelector('span:last-child')?.remove();
-    const label = document.createElement('span');
-    label.textContent = isPaused ? 'Resume Queue' : 'Pause Queue';
-    btnPause.appendChild(label);
+    const iconSpan = btnPause.querySelector('.control-icon');
+    if (iconSpan) {
+      iconSpan.textContent = isPaused ? '▶️' : '⏸️';
+    }
     updateStatus();
   }
 }
@@ -260,78 +446,132 @@ async function moveSong(songId, position) {
   });
 }
 
-function emergencyStop() {
-  if (confirm('EMERGENCY STOP: This will pause everything. Continue?')) {
-    togglePause();
-    // Could add more emergency actions here
-    alert('Queue paused. Refresh display screens to reset.');
-  }
-}
-
-async function newParty() {
-  if (confirm('🎉 START NEW PARTY?\n\nThis will:\n• Clear all songs from the queue\n• Reset stats and drunk-o-meter\n• Keep guests registered\n\nAre you sure?')) {
+async function resetParty() {
+  if (confirm('Reset the party? This clears all songs and stats.')) {
     const result = await apiCall('/api/kj/reset');
     if (result?.success) {
-      alert('🎉 Party reset! Ready for a fresh start!');
+      stopPerformanceTimer();
+      showScreen('waiting');
     }
   }
 }
 
-// Button event listeners
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+    document.body.classList.remove('fullscreen-mode');
+  } else {
+    document.documentElement.requestFullscreen();
+    document.body.classList.add('fullscreen-mode');
+  }
+}
+
+// ============ EVENT LISTENERS ============
+
 btnStart.addEventListener('click', startParty);
 btnAdvance.addEventListener('click', advanceToNext);
 btnSkip.addEventListener('click', skipCurrent);
 btnPause.addEventListener('click', togglePause);
-btnEmergency.addEventListener('click', emergencyStop);
-btnNewParty.addEventListener('click', newParty);
+btnReset.addEventListener('click', resetParty);
+btnFullscreen.addEventListener('click', toggleFullscreen);
 
-// Socket events
+// Double-click main stage for fullscreen
+document.querySelector('.main-stage').addEventListener('dblclick', toggleFullscreen);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return;
+
+  if (e.code === 'Space' && currentSong) {
+    e.preventDefault();
+    advanceToNext();
+  }
+  if (e.code === 'KeyS' && currentSong) {
+    e.preventDefault();
+    skipCurrent();
+  }
+  if (e.code === 'KeyP') {
+    e.preventDefault();
+    togglePause();
+  }
+  if (e.code === 'KeyF') {
+    e.preventDefault();
+    toggleFullscreen();
+  }
+});
+
+// ============ SOCKET EVENTS ============
+
 socket.on('queue-updated', (data) => {
   queue = data.queue || [];
   currentSong = data.current || null;
 
   renderQueue();
-  updateNowPlaying();
+  updateButtonStates();
   updateStatus();
 
   // Update stats
   if (data.stats) {
     statQueued.textContent = data.stats.totalQueued;
     statCompleted.textContent = data.stats.totalCompleted;
-    statDrunk.textContent = `${data.stats.drunkOMeter}%`;
+    updateDrunkOMeter(data.stats.drunkOMeter);
+  }
+
+  // Handle screen state
+  if (!currentSong && queue.length === 0) {
+    stopPerformanceTimer();
+    clearInterval(countdownInterval);
+    showScreen('waiting');
+  } else if (!currentSong && queue.length > 0) {
+    // Queue has songs but nothing playing - show waiting
+    stopPerformanceTimer();
   }
 });
 
 socket.on('now-playing', (data) => {
+  // Start countdown for next performer
+  startCountdown(data.song, data.roast, data.isVip);
+
+  // Auto-open YouTube video if autoPlay flag is set
+  if (data.autoPlay && data.song) {
+    const youtubeUrl = data.song.youtubeUrl || `https://www.youtube.com/watch?v=${data.song.youtubeId}`;
+    window.open(youtubeUrl, '_blank');
+  }
+
   currentSong = data.song;
-  updateNowPlaying();
+  updateButtonStates();
   updateStatus();
+});
+
+socket.on('reaction', (data) => {
+  showReaction(data.emoji);
 });
 
 socket.on('pause-state', (data) => {
   isPaused = data.isPaused;
-  btnPause.querySelector('.control-icon').textContent = isPaused ? '▶️' : '⏸️';
+  pausedOverlay.classList.toggle('active', isPaused);
+
+  const iconSpan = btnPause.querySelector('.control-icon');
+  if (iconSpan) {
+    iconSpan.textContent = isPaused ? '▶️' : '⏸️';
+  }
   updateStatus();
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  // Space = advance (when current song playing)
-  if (e.code === 'Space' && currentSong && !e.target.matches('input, textarea')) {
-    e.preventDefault();
-    advanceToNext();
-  }
-  // S = skip
-  if (e.code === 'KeyS' && currentSong && !e.target.matches('input, textarea')) {
-    e.preventDefault();
-    skipCurrent();
-  }
-  // P = pause
-  if (e.code === 'KeyP' && !e.target.matches('input, textarea')) {
-    e.preventDefault();
-    togglePause();
-  }
+socket.on('vip-skip', (data) => {
+  triggerConfetti();
+  showReaction('👑');
+  showReaction('⚡');
+  showReaction('👑');
 });
 
-// Initial state
+socket.on('party-reset', () => {
+  stopPerformanceTimer();
+  clearInterval(countdownInterval);
+  showScreen('waiting');
+});
+
+// ============ INITIALIZE ============
+
+showScreen('waiting');
 updateStatus();

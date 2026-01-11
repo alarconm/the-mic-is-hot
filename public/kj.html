@@ -3,44 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KJ Controls - The Mic Is Hot</title>
+  <title>The Mic Is Hot - Karaoke Control</title>
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    .kj-layout {
-      display: grid;
-      grid-template-columns: 1fr 400px;
-      min-height: 100vh;
+    body {
+      overflow: hidden;
       background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F5 30%, #F0F4FF 70%, #F8F6FF 100%);
     }
 
-    .kj-main {
-      padding: 1.5rem;
-      overflow-y: auto;
+    .kj-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      height: 100vh;
     }
 
-    .kj-sidebar {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 1.5rem;
-      border-left: 1px solid rgba(114, 9, 183, 0.1);
+    /* Main Stage - The Projector Display */
+    .main-stage {
       display: flex;
       flex-direction: column;
-      box-shadow: -8px 0 32px rgba(114, 9, 183, 0.08);
+      padding: 1.5rem;
+      position: relative;
     }
 
-    .kj-header {
+    .logo-bar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
-    .kj-title {
+    .logo-text {
       font-size: 1.5rem;
-      font-weight: 800;
-      color: #2D3047;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FF6B6B, #F72585, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .status-badge {
@@ -48,6 +46,7 @@
       border-radius: 20px;
       font-weight: 600;
       font-size: 0.875rem;
+      margin-left: auto;
     }
 
     .status-live {
@@ -66,47 +65,263 @@
       color: #5C5F7B;
     }
 
-    .now-playing-card {
-      background: linear-gradient(135deg, rgba(247, 37, 133, 0.15), rgba(255, 107, 107, 0.1));
-      border: 2px solid #F72585;
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 8px 24px rgba(247, 37, 133, 0.15);
+    /* Screens */
+    .display-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
-    .now-playing-card.vip {
-      border-color: #FFD93D;
-      background: linear-gradient(135deg, rgba(255, 217, 61, 0.2), rgba(255, 159, 28, 0.15));
-      box-shadow: 0 8px 24px rgba(255, 159, 28, 0.2);
+    .hidden {
+      display: none !important;
     }
 
-    .np-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
+    /* Waiting Screen */
+    .waiting-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+    }
+
+    .waiting-icon {
+      font-size: 8rem;
+      margin-bottom: 2rem;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .waiting-title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #FF6B6B, #F72585, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .waiting-subtitle {
+      font-size: 1.5rem;
+      color: #5C5F7B;
+      font-weight: 500;
+    }
+
+    /* Now Playing Screen */
+    .now-playing-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-action-wrapper {
+      flex: 1;
+      background: linear-gradient(135deg, #1a1a2e, #2d2d4a);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      min-height: 300px;
+      box-shadow: 0 16px 48px rgba(114, 9, 183, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .play-video-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 3rem 5rem;
+      background: linear-gradient(135deg, #FF6B6B, #F72585);
+      border-radius: 24px;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(247, 37, 133, 0.4);
+      cursor: pointer;
+    }
+
+    .play-video-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 48px rgba(247, 37, 133, 0.6);
+    }
+
+    .play-icon {
+      font-size: 5rem;
+      line-height: 1;
+    }
+
+    .play-text {
+      font-size: 1.5rem;
+      font-weight: 800;
       letter-spacing: 0.1em;
+    }
+
+    .performance-timer {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .performer-info {
+      padding: 1.5rem;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      margin-top: 1rem;
+      box-shadow: 0 8px 32px rgba(114, 9, 183, 0.1);
+    }
+
+    .performer-label {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
       color: #F72585;
       margin-bottom: 0.5rem;
       font-weight: 700;
     }
 
-    .np-name {
-      font-size: 2rem;
-      font-weight: 800;
+    .performer-name {
+      font-size: 3rem;
+      font-weight: 900;
       margin-bottom: 0.25rem;
-      color: #2D3047;
+      background: linear-gradient(135deg, #FF6B6B, #F72585, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .np-song {
-      font-size: 1.25rem;
+    .performer-name.vip {
+      background: linear-gradient(135deg, #FFD93D, #FF9F1C, #F72585);
+      -webkit-background-clip: text;
+      animation: vipGlow 2s infinite;
+    }
+
+    @keyframes vipGlow {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 61, 0.5)); }
+      50% { filter: drop-shadow(0 0 40px rgba(255, 215, 61, 0.8)); }
+    }
+
+    .performer-song {
+      font-size: 1.5rem;
+      color: #5C5F7B;
+      font-weight: 500;
+    }
+
+    .roast-text {
+      font-style: italic;
+      font-size: 1.125rem;
+      color: #9094B2;
+      margin-top: 0.75rem;
+      opacity: 0;
+      animation: fadeInRoast 1s ease 0.5s forwards;
+    }
+
+    @keyframes fadeInRoast {
+      to { opacity: 1; }
+    }
+
+    /* Countdown Screen */
+    .countdown-section {
+      padding: 1.5rem;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(247, 37, 133, 0.1), rgba(114, 9, 183, 0.1));
+      border-radius: 24px;
+      margin-top: 1rem;
+      border: 2px solid rgba(247, 37, 133, 0.2);
+    }
+
+    .countdown-label {
+      font-size: 0.875rem;
+      color: #5C5F7B;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .countdown-timer {
+      font-size: 6rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      background: linear-gradient(135deg, #4CC9F0, #4361EE, #7209B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .countdown-timer.warning {
+      background: linear-gradient(135deg, #FFD93D, #FF9F1C);
+      -webkit-background-clip: text;
+    }
+
+    .countdown-timer.urgent {
+      background: linear-gradient(135deg, #FF9F1C, #FF6B6B);
+      -webkit-background-clip: text;
+      animation: pulse 0.5s infinite;
+    }
+
+    .countdown-timer.critical {
+      background: linear-gradient(135deg, #FF6B6B, #F72585);
+      -webkit-background-clip: text;
+      animation: shake 0.2s infinite, pulse 0.3s infinite;
+    }
+
+    .countdown-message {
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      font-weight: 700;
       color: #5C5F7B;
     }
 
+    /* Sidebar - KJ Controls */
+    .kj-sidebar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 1rem;
+      border-left: 1px solid rgba(114, 9, 183, 0.1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 32px rgba(114, 9, 183, 0.08);
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #5C5F7B;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+    }
+
+    /* Control Buttons */
     .control-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     .control-btn {
@@ -114,17 +329,16 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      padding: 1.5rem;
+      gap: 0.25rem;
+      padding: 0.75rem;
       background: rgba(255, 255, 255, 0.9);
       border: 2px solid rgba(114, 9, 183, 0.15);
-      border-radius: 16px;
+      border-radius: 12px;
       color: #2D3047;
-      font-size: 1rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.08);
     }
 
     .control-btn:hover {
@@ -142,12 +356,6 @@
       color: white;
       border: none;
       grid-column: span 2;
-      box-shadow: 0 8px 24px rgba(247, 37, 133, 0.35);
-    }
-
-    .control-btn.primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(247, 37, 133, 0.45);
     }
 
     .control-btn.success {
@@ -156,28 +364,16 @@
       color: #059669;
     }
 
-    .control-btn.success:hover {
-      background: rgba(6, 214, 160, 0.2);
-    }
-
     .control-btn.warning {
       border-color: #FF9F1C;
       background: rgba(255, 159, 28, 0.1);
       color: #D97706;
     }
 
-    .control-btn.warning:hover {
-      background: rgba(255, 159, 28, 0.2);
-    }
-
     .control-btn.danger {
       border-color: #FF6B6B;
       background: rgba(255, 107, 107, 0.1);
       color: #DC2626;
-    }
-
-    .control-btn.danger:hover {
-      background: rgba(255, 107, 107, 0.2);
     }
 
     .control-btn:disabled {
@@ -187,50 +383,47 @@
     }
 
     .control-icon {
-      font-size: 2rem;
+      font-size: 1.25rem;
     }
 
+    /* Queue List */
     .queue-section {
       flex: 1;
       overflow-y: auto;
+      min-height: 0;
     }
 
     .queue-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .queue-header h2 {
-      color: #2D3047;
+      margin-bottom: 0.5rem;
     }
 
     .queue-count {
       background: rgba(247, 37, 133, 0.1);
       color: #F72585;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
     }
 
     .kj-queue-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
+      gap: 0.75rem;
+      padding: 0.75rem;
       background: rgba(255, 255, 255, 0.95);
       border: 1px solid rgba(114, 9, 183, 0.1);
-      border-radius: 12px;
-      margin-bottom: 0.75rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
       cursor: grab;
       transition: all 0.2s;
     }
 
     .kj-queue-item:hover {
       background: rgba(247, 37, 133, 0.05);
-      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.1);
     }
 
     .kj-queue-item.vip {
@@ -238,21 +431,23 @@
       background: rgba(255, 217, 61, 0.1);
     }
 
-    .kj-queue-item.dragging {
-      opacity: 0.5;
+    .kj-queue-item.next {
+      border: 2px solid #F72585;
+      background: rgba(247, 37, 133, 0.1);
     }
 
     .queue-position {
-      width: 36px;
-      height: 36px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, #4CC9F0, #4361EE);
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: 700;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: white;
+      flex-shrink: 0;
     }
 
     .queue-info {
@@ -262,15 +457,15 @@
 
     .queue-name {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.875rem;
       color: #2D3047;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.25rem;
     }
 
     .queue-song {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: #5C5F7B;
       white-space: nowrap;
       overflow: hidden;
@@ -279,20 +474,21 @@
 
     .queue-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.25rem;
     }
 
     .queue-action-btn {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: rgba(255, 107, 107, 0.1);
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       color: #DC2626;
       cursor: pointer;
+      font-size: 0.75rem;
       transition: all 0.2s;
     }
 
@@ -301,115 +497,294 @@
       color: white;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 1rem;
-      border-radius: 16px;
+    .empty-queue {
       text-align: center;
-      border: 1px solid rgba(114, 9, 183, 0.1);
-      box-shadow: 0 4px 16px rgba(114, 9, 183, 0.06);
+      padding: 1.5rem;
+      color: #5C5F7B;
+      font-size: 0.875rem;
     }
 
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #FF6B6B, #F72585);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    /* Stats Section */
+    .stats-section {
+      margin-top: auto;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.1);
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
     }
 
     .stat-label {
-      font-size: 0.75rem;
       color: #5C5F7B;
-      text-transform: uppercase;
-      font-weight: 600;
     }
 
-    .empty-queue {
+    .stat-value {
+      font-weight: 700;
+      color: #F72585;
+    }
+
+    .drunk-meter-bar {
+      height: 12px;
+      background: rgba(114, 9, 183, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .drunk-meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #06D6A0, #FFD93D, #FF9F1C, #FF6B6B, #F72585);
+      transition: width 0.5s ease;
+      border-radius: 8px;
+    }
+
+    .drunk-meter-status {
       text-align: center;
-      padding: 2rem;
-      color: #5C5F7B;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #F72585;
     }
 
-    .empty-queue p:first-child {
-      font-weight: 600;
-      color: #2D3047;
-      margin-bottom: 0.5rem;
+    /* Reaction overlay */
+    .reaction-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 380px;
+      bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .floating-reaction {
+      position: absolute;
+      font-size: 4rem;
+      animation: floatUp 3s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      50% { opacity: 1; transform: translateY(-200px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-400px) scale(0.5); }
+    }
+
+    /* Confetti */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      animation: confettiFall 4s ease-in-out forwards;
+      border-radius: 3px;
+    }
+
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(-100vh) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotate(1080deg); }
+    }
+
+    /* Paused overlay */
+    .paused-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    .paused-overlay.active {
+      display: flex;
+    }
+
+    .paused-text {
+      font-size: 5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FFD93D, #FF9F1C);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulse 1s infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.02); }
     }
 
-    @media (max-width: 900px) {
-      .kj-layout {
-        grid-template-columns: 1fr;
-        min-height: auto;
-      }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
 
-      .kj-sidebar {
-        border-left: none;
-        border-top: 1px solid rgba(114, 9, 183, 0.1);
-      }
+    /* Background blobs */
+    .bg-blobs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
 
-      .control-grid {
-        grid-template-columns: 1fr;
-      }
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.4;
+      animation: blobFloat 20s ease-in-out infinite;
+    }
 
-      .control-btn.primary {
-        grid-column: span 1;
-      }
+    .bg-blob:nth-child(1) {
+      width: 400px;
+      height: 400px;
+      background: rgba(247, 37, 133, 0.15);
+      top: -100px;
+      right: 400px;
+    }
 
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+    .bg-blob:nth-child(2) {
+      width: 300px;
+      height: 300px;
+      background: rgba(76, 201, 240, 0.15);
+      bottom: -50px;
+      left: 100px;
+      animation-delay: -5s;
+    }
+
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* Fullscreen mode hides sidebar */
+    body.fullscreen-mode .kj-sidebar {
+      display: none;
+    }
+
+    body.fullscreen-mode .kj-layout {
+      grid-template-columns: 1fr;
+    }
+
+    body.fullscreen-mode .reaction-overlay {
+      right: 0;
+    }
+
+    /* Quick links */
+    .quick-links {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .quick-link {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(114, 9, 183, 0.1);
+      border-radius: 6px;
+      color: #5C5F7B;
+      text-decoration: none;
+    }
+
+    .quick-link:hover {
+      background: rgba(247, 37, 133, 0.2);
+      color: #F72585;
     }
   </style>
 </head>
-<body class="bg-gradient">
+<body>
+  <!-- Background blobs -->
+  <div class="bg-blobs">
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+  </div>
+
   <div class="kj-layout">
-    <div class="kj-main">
-      <div class="kj-header">
-        <h1 class="kj-title">🎛️ KJ Control Panel</h1>
+    <!-- Main Stage - Projector Display -->
+    <div class="main-stage">
+      <div class="logo-bar">
+        <span style="font-size: 1.75rem;">🎤🔥</span>
+        <span class="logo-text">The Mic Is Hot</span>
         <div id="status-badge" class="status-badge status-waiting">Waiting</div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div id="stat-queued" class="stat-value">0</div>
-          <div class="stat-label">In Queue</div>
+      <!-- Waiting state -->
+      <div id="waiting-screen" class="display-screen waiting-screen">
+        <div class="waiting-icon">🎤</div>
+        <h1 class="waiting-title">Ready to Party!</h1>
+        <p class="waiting-subtitle">Scan the QR code to sign up for karaoke</p>
+        <p style="color: #9094B2; margin-top: 2rem; font-weight: 500;">Waiting for the first performer...</p>
+      </div>
+
+      <!-- Now playing state -->
+      <div id="now-playing-screen" class="display-screen now-playing-section hidden">
+        <div class="video-action-wrapper">
+          <a id="youtube-link" href="#" target="_blank" class="play-video-btn">
+            <span class="play-icon">▶</span>
+            <span class="play-text">PLAY KARAOKE VIDEO</span>
+          </a>
+          <div class="performance-timer">
+            <span>⏱️</span>
+            <span id="timer-display">0:00</span>
+          </div>
         </div>
-        <div class="stat-card">
-          <div id="stat-completed" class="stat-value">0</div>
-          <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-card">
-          <div id="stat-drunk" class="stat-value">0%</div>
-          <div class="stat-label">Drunk-O-Meter</div>
+
+        <div class="performer-info">
+          <div class="performer-label">🔥 NOW PERFORMING 🔥</div>
+          <h1 id="current-name" class="performer-name">-</h1>
+          <p id="current-song" class="performer-song">-</p>
+          <p id="roast-text" class="roast-text"></p>
         </div>
       </div>
 
-      <!-- Now Playing -->
-      <div id="now-playing-card" class="now-playing-card hidden">
-        <div class="np-label">🔥 NOW PERFORMING</div>
-        <div id="np-name" class="np-name">-</div>
-        <div id="np-song" class="np-song">-</div>
-        <a id="np-youtube-link" href="#" target="_blank" class="btn btn-hot" style="margin-top: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-          ▶️ Open Karaoke Video
-        </a>
+      <!-- Countdown state -->
+      <div id="countdown-screen" class="display-screen now-playing-section hidden">
+        <div class="performer-info" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <div class="performer-label">🎤 UP NEXT 🎤</div>
+          <h1 id="countdown-name" class="performer-name">-</h1>
+          <p id="countdown-song" class="performer-song">-</p>
+          <p id="countdown-roast" class="roast-text"></p>
+        </div>
+
+        <div class="countdown-section">
+          <div class="countdown-label">GET TO THE MIC IN</div>
+          <div id="countdown-timer" class="countdown-timer">90</div>
+          <div id="countdown-message" class="countdown-message">Your moment approaches...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KJ Sidebar - Controls -->
+    <div class="kj-sidebar">
+      <div class="quick-links">
+        <a href="/" target="_blank" class="quick-link">📱 QR Code</a>
+        <a href="/guest" target="_blank" class="quick-link">👤 Guest</a>
+        <button id="btn-fullscreen" class="quick-link" style="border: none; cursor: pointer;">📺 Fullscreen</button>
       </div>
 
-      <!-- Controls -->
+      <!-- Control Buttons -->
       <div class="control-grid">
         <button id="btn-start" class="control-btn primary">
           <span class="control-icon">▶️</span>
@@ -418,60 +793,63 @@
 
         <button id="btn-advance" class="control-btn success" disabled>
           <span class="control-icon">✅</span>
-          Song Done - Next
+          Next
         </button>
 
         <button id="btn-skip" class="control-btn warning" disabled>
           <span class="control-icon">⏭️</span>
-          Skip Performer
+          Skip
         </button>
 
         <button id="btn-pause" class="control-btn" disabled>
           <span class="control-icon">⏸️</span>
-          Pause Queue
+          Pause
         </button>
 
-        <button id="btn-emergency" class="control-btn danger">
-          <span class="control-icon">🛑</span>
-          Emergency Stop
+        <button id="btn-reset" class="control-btn danger">
+          <span class="control-icon">🔄</span>
+          Reset
         </button>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="card">
-        <h3 style="margin-bottom: 1rem; color: #2D3047;">Quick Links</h3>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-          <a href="/" target="_blank" class="btn btn-outline">📱 QR Code Page</a>
-          <a href="/display" target="_blank" class="btn btn-outline">📺 Party Display</a>
-          <a href="/guest" target="_blank" class="btn btn-outline">👤 Guest View</a>
-        </div>
-      </div>
-
-      <!-- Party Management -->
-      <div class="card" style="margin-top: 1rem;">
-        <h3 style="margin-bottom: 1rem; color: #2D3047;">Party Management</h3>
-        <button id="btn-new-party" class="btn btn-outline" style="width: 100%; border-color: #FF6B6B; color: #DC2626;">
-          🎉 Start New Party (Reset All)
-        </button>
-        <p style="font-size: 0.75rem; color: #9094B2; margin-top: 0.5rem; text-align: center;">
-          Clears queue & stats. Guests stay registered.
-        </p>
-      </div>
-    </div>
-
-    <div class="kj-sidebar">
+      <!-- Queue -->
       <div class="queue-header">
-        <h2>📋 Queue</h2>
-        <span id="queue-count" class="queue-count">0 songs</span>
+        <span class="sidebar-title">📋 Queue</span>
+        <span id="queue-count" class="queue-count">0</span>
       </div>
 
       <div id="queue-list" class="queue-section">
-        <div class="empty-queue">
-          <p>No songs in queue</p>
-          <p style="font-size: 0.875rem;">Waiting for guests to sign up...</p>
+        <div class="empty-queue">No songs in queue</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-section">
+        <div class="stats-row">
+          <span class="stat-label">In Queue</span>
+          <span id="stat-queued" class="stat-value">0</span>
         </div>
+        <div class="stats-row">
+          <span class="stat-label">Completed</span>
+          <span id="stat-completed" class="stat-value">0</span>
+        </div>
+        <div class="sidebar-title" style="margin-top: 0.5rem; margin-bottom: 0.25rem;">🍺 Drunk-O-Meter</div>
+        <div class="drunk-meter-bar">
+          <div id="drunk-meter-fill" class="drunk-meter-fill" style="width: 0%"></div>
+        </div>
+        <div id="drunk-meter-status" class="drunk-meter-status">Sober Karaoke</div>
       </div>
     </div>
+  </div>
+
+  <!-- Reaction overlay -->
+  <div class="reaction-overlay" id="reaction-overlay"></div>
+
+  <!-- Confetti container -->
+  <div class="confetti-container" id="confetti-container"></div>
+
+  <!-- Paused overlay -->
+  <div class="paused-overlay" id="paused-overlay">
+    <div class="paused-text">⏸️ PAUSED</div>
   </div>
 
   <script src="/js/kj.js"></script>

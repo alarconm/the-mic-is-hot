@@ -157,35 +157,54 @@ function extractYouTubeId(url) {
   return null;
 }
 
-// Get queue sorted by: VIP skip > songs_completed ASC > submitted_at ASC
+// Get queue sorted by: VIP skip > round-robin (song number) > submitted_at ASC
+// Round-robin ensures everyone's 1st song plays before anyone's 2nd song, etc.
 function getQueue() {
-  return store.songs
-    .filter(s => s.status === 'queued')
-    .map(s => {
-      const guest = store.guests.get(s.guestId);
-      return {
-        ...s,
-        songs_completed: guest?.songsCompleted || 0,
-        is_vip: guest?.isVip || false,
-        skip_used: guest?.skipUsed || false
-      };
-    })
-    .sort((a, b) => {
-      // First: position override (VIP skip) - handle null/undefined
-      const aHasOverride = a.positionOverride != null;
-      const bHasOverride = b.positionOverride != null;
-      if (aHasOverride && !bHasOverride) return -1;
-      if (!aHasOverride && bHasOverride) return 1;
-      if (aHasOverride && bHasOverride) {
-        return a.positionOverride - b.positionOverride;
-      }
-      // Second: fewer songs completed = higher priority (fairness algorithm)
-      if (a.songs_completed !== b.songs_completed) {
-        return a.songs_completed - b.songs_completed;
-      }
-      // Third: first come first serve
-      return new Date(a.submittedAt) - new Date(b.submittedAt);
-    });
+  const queuedSongs = store.songs.filter(s => s.status === 'queued');
+
+  // First, sort by submittedAt to assign song numbers consistently
+  const sortedByTime = [...queuedSongs].sort((a, b) =>
+    new Date(a.submittedAt) - new Date(b.submittedAt)
+  );
+
+  // Calculate song number for each guest (1st, 2nd, 3rd song in queue)
+  const guestSongCounts = {};
+
+  const songsWithNumbers = sortedByTime.map(song => {
+    if (!guestSongCounts[song.guestId]) {
+      guestSongCounts[song.guestId] = 0;
+    }
+    guestSongCounts[song.guestId]++;
+
+    const guest = store.guests.get(song.guestId);
+    return {
+      ...song,
+      songNumber: guestSongCounts[song.guestId], // 1st, 2nd, 3rd song for this guest
+      songs_completed: guest?.songsCompleted || 0,
+      is_vip: guest?.isVip || false,
+      skip_used: guest?.skipUsed || false
+    };
+  });
+
+  // Now sort by: positionOverride > songNumber (round-robin) > submittedAt
+  return songsWithNumbers.sort((a, b) => {
+    // First: position override (VIP skip) - handle null/undefined
+    const aHasOverride = a.positionOverride != null;
+    const bHasOverride = b.positionOverride != null;
+    if (aHasOverride && !bHasOverride) return -1;
+    if (!aHasOverride && bHasOverride) return 1;
+    if (aHasOverride && bHasOverride) {
+      return a.positionOverride - b.positionOverride;
+    }
+
+    // Second: round-robin by song number (everyone's 1st song, then 2nd, etc.)
+    if (a.songNumber !== b.songNumber) {
+      return a.songNumber - b.songNumber;
+    }
+
+    // Third: first come first serve within the same round
+    return new Date(a.submittedAt) - new Date(b.submittedAt);
+  });
 }
 
 // Get current playing song
@@ -753,8 +772,9 @@ app.get('/guest', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'guest.html'));
 });
 
+// Redirect /display to /kj (display is now integrated into KJ view)
 app.get('/display', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'display.html'));
+  res.redirect('/kj');
 });
 
 app.get('/kj', (req, res) => {
@@ -774,8 +794,7 @@ httpServer.listen(PORT, () => {
   ║  Routes:                                  ║
   ║  • /        - QR code landing page        ║
   ║  • /guest   - Guest mobile view           ║
-  ║  • /display - Party display (projector)   ║
-  ║  • /kj      - KJ control panel            ║
+  ║  • /kj      - Main display + controls     ║
   ╚═══════════════════════════════════════════╝
   `);
 });
