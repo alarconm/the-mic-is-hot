@@ -10,6 +10,7 @@ let mySongs = [];
 let currentlyPlaying = null;
 let isMyTurn = false;
 let amIPerforming = false;
+let usedSongs = []; // Track all songs that have been queued/sung for duplicate detection
 
 // Loading messages for fun
 const loadingMessages = [
@@ -267,6 +268,8 @@ function searchYouTube(query) {
       videoPreview.classList.remove('hidden');
       youtubeModal.classList.remove('active');
       showToast('Video added! Now submit your song 🎤');
+      // Check for duplicate song
+      checkForDuplicateSong(videoId);
     }
   });
 
@@ -285,6 +288,8 @@ function searchYouTube(query) {
         videoPreview.classList.remove('hidden');
         youtubeModal.classList.remove('active');
         showToast('Video added! Now submit your song 🎤');
+        // Check for duplicate song
+        checkForDuplicateSong(videoId);
       } else {
         showToast('No YouTube URL found in clipboard');
       }
@@ -313,8 +318,12 @@ youtubeUrlInput.addEventListener('input', (e) => {
     previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
     previewTitle.textContent = 'Video found! ✓';
     videoPreview.classList.remove('hidden');
+
+    // Check for duplicate songs
+    checkForDuplicateSong(videoId);
   } else {
     videoPreview.classList.add('hidden');
+    hideDuplicateWarning();
   }
 });
 
@@ -329,6 +338,121 @@ function extractYouTubeId(url) {
     if (match) return match[1];
   }
   return null;
+}
+
+// Check for duplicate song and show warning
+function checkForDuplicateSong(videoId) {
+  // Find if this song is already in the used songs list
+  const duplicate = usedSongs.find(s => s.youtubeId === videoId);
+
+  if (duplicate) {
+    showDuplicateWarning(duplicate);
+  } else {
+    hideDuplicateWarning();
+  }
+}
+
+// Show big warning modal for duplicate song
+function showDuplicateWarning(duplicate) {
+  // Remove existing warning if any
+  hideDuplicateWarning();
+
+  // Create the warning overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'duplicate-warning-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+  `;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: linear-gradient(135deg, #2D2F3E, #1E1F2E);
+    border-radius: 24px;
+    padding: 2rem;
+    max-width: 90%;
+    width: 400px;
+    text-align: center;
+    border: 3px solid #FF6B6B;
+    box-shadow: 0 0 60px rgba(255, 107, 107, 0.5);
+    animation: pulse 1s infinite;
+  `;
+
+  // Warning icon
+  const icon = document.createElement('div');
+  icon.style.cssText = 'font-size: 4rem; margin-bottom: 1rem;';
+  icon.textContent = '⚠️';
+
+  // Title
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size: 1.5rem; font-weight: 700; color: #FF6B6B; margin-bottom: 1rem;';
+  title.textContent = 'SONG ALREADY PICKED!';
+
+  // Message
+  const message = document.createElement('div');
+  message.style.cssText = 'font-size: 1rem; color: #FFFFFF; margin-bottom: 0.5rem;';
+
+  let statusText = '';
+  if (duplicate.status === 'queued') {
+    statusText = 'is already in the queue';
+  } else if (duplicate.status === 'current') {
+    statusText = 'is being performed RIGHT NOW';
+  } else if (duplicate.status === 'completed') {
+    statusText = 'has already been sung';
+  }
+
+  message.textContent = `This song ${statusText} by:`;
+
+  // Singer name
+  const singer = document.createElement('div');
+  singer.style.cssText = 'font-size: 1.5rem; font-weight: 700; color: #F72585; margin: 1rem 0;';
+  singer.textContent = duplicate.guestName;
+
+  // Song title
+  const songTitle = document.createElement('div');
+  songTitle.style.cssText = 'font-size: 0.9rem; color: #5C5F7B; margin-bottom: 1.5rem; font-style: italic;';
+  songTitle.textContent = `"${duplicate.songTitle}"`;
+
+  // Subtext
+  const subtext = document.createElement('div');
+  subtext.style.cssText = 'font-size: 0.85rem; color: #FF9F1C; margin-bottom: 1.5rem;';
+  subtext.textContent = 'You can still pick this song, but just know someone else chose it too!';
+
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-block';
+  closeBtn.style.cssText = 'background: linear-gradient(135deg, #4361EE, #7209B7); font-size: 1rem; padding: 0.75rem;';
+  closeBtn.textContent = 'GOT IT, I UNDERSTAND';
+  closeBtn.addEventListener('click', hideDuplicateWarning);
+
+  modal.appendChild(icon);
+  modal.appendChild(title);
+  modal.appendChild(message);
+  modal.appendChild(singer);
+  modal.appendChild(songTitle);
+  modal.appendChild(subtext);
+  modal.appendChild(closeBtn);
+  overlay.appendChild(modal);
+
+  document.body.appendChild(overlay);
+}
+
+// Hide duplicate warning
+function hideDuplicateWarning() {
+  const existing = document.getElementById('duplicate-warning-overlay');
+  if (existing) {
+    existing.remove();
+  }
 }
 
 // Render queue using safe DOM methods
@@ -518,6 +642,7 @@ vipSkipBtn.addEventListener('click', async () => {
 socket.on('queue-updated', (data) => {
   currentQueue = data.queue;
   currentlyPlaying = data.current;
+  usedSongs = data.usedSongs || []; // Store for duplicate detection
   renderQueue(data.queue);
   updatePerformerStatus();
 

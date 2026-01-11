@@ -278,18 +278,32 @@ function getHallOfFame() {
   };
 }
 
+// Get all songs that have been used (queued, current, or completed) for duplicate detection
+function getUsedSongs() {
+  return store.songs
+    .filter(s => s.status === 'queued' || s.status === 'current' || s.status === 'completed')
+    .map(s => ({
+      youtubeId: s.youtubeId,
+      songTitle: s.songTitle,
+      guestName: s.guestName,
+      status: s.status
+    }));
+}
+
 // Broadcast queue update to all clients
 function broadcastQueueUpdate() {
   const queue = getQueue();
   const current = getCurrentSong();
   const stats = getStats();
   const hallOfFame = getHallOfFame();
+  const usedSongs = getUsedSongs();
 
   io.emit('queue-updated', {
     queue,
     current,
     stats,
-    hallOfFame
+    hallOfFame,
+    usedSongs
   });
 }
 
@@ -768,7 +782,8 @@ io.on('connection', (socket) => {
     queue: getQueue(),
     current: getCurrentSong(),
     stats: getStats(),
-    hallOfFame: getHallOfFame()
+    hallOfFame: getHallOfFame(),
+    usedSongs: getUsedSongs()
   });
 
   socket.on('disconnect', () => {
